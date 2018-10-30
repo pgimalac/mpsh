@@ -1,5 +1,6 @@
 NAME = mpsh
-FILES = src/main.c
+FILES = src/regexp.c \
+	src/main.c
 
 OBJ = $(FILES:%.c=%.o)
 
