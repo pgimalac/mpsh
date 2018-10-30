@@ -1,5 +1,6 @@
 NAME = mpsh
 FILES = src/main.c
+LDLIBS = -lreadline
 
 OBJ = $(FILES:%.c=%.o)
 
@@ -9,10 +10,10 @@ FLAGS = -Wall -Wextra -Werror
 all: $(NAME)
 
 $(NAME): $(OBJ)
-	$(CC) $(FLAGS) $(OBJ) -o $(NAME)
+	$(CC) $(FLAGS) $(LDLIBS) $(OBJ) -o $(NAME)
 
 %.o: %.c
-	$(CC) $(FLAGS) -c $? -o $@
+	$(CC) $(FLAGS) $(LDLIBS) -c $? -o $@
 
 clean:
 	rm -rf $(OBJ)
