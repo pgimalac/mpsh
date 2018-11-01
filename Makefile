@@ -5,7 +5,7 @@ LDLIBS = -lreadline
 OBJ = $(FILES:%.c=%.o)
 
 CC = gcc
-FLAGS = -Wall -Wextra -Werror
+FLAGS = -Wall -Wextra -Werror -g
 
 all: $(NAME)
 

@@ -1,6 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <string.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <dirent.h>
 #include <readline/readline.h>
 #include <readline/history.h>
 
@@ -10,8 +14,60 @@ char *dupstr(char *s){
     return r;
 }
 
-char *completions[] = { "echo", "cat" };
-int nb_completions = 2;
+#define MAX_COMPLETION 10000
+
+char *completions[MAX_COMPLETION];
+int nb_completions;
+
+void init_completion () {
+    DIR *dir;
+    struct dirent *entry;
+    char *var_path = getenv("PATH");
+    char *path;
+    char *saveptr1, *saveptr2;
+
+    nb_completions = 0;
+    for (int i = 0; i < MAX_COMPLETION; i++)
+	completions[i] = 0;
+    
+    for (path = strtok_r(var_path, ":", &saveptr1);; var_path = 0) {
+	path = strtok_r(0, ":", &saveptr1);
+	if (!path) break;
+	
+	struct stat stat_buf;
+	if (stat(path, &stat_buf) == 0) {
+	    if (S_ISDIR(stat_buf.st_mode)) {
+		
+		if ((dir = opendir(path))) {
+		    while ((entry = readdir(dir)) && nb_completions < MAX_COMPLETION)
+			if (entry->d_type == DT_REG) { // TODO: check exec
+			    char buf[256];
+			    strncpy(buf, entry->d_name, 255);
+			    completions[nb_completions++] = buf;
+			}
+		} else {
+		    // TODO: handler error
+		}
+
+		closedir(dir);
+	    } else if (nb_completions < MAX_COMPLETION) {
+		char *name, *tmp;
+		for (tmp = strtok_r(path, "/", &saveptr2);; path = 0) {
+		    tmp = strtok_r(0, "/", &saveptr2);
+		    if (!tmp) break;
+		    name = tmp;
+		}
+		
+		completions[nb_completions++] = name;
+	    }
+	} else {
+	    // TODO: handle error
+	}
+    }
+
+    for (int i = 0; i < nb_completions; i++)
+	printf("%s\n", completions[i]);
+}
 
 char *command_generator (const char *com, int num){
     static int indice, len;
@@ -58,6 +114,7 @@ void command_line_handler () {
 int main (void) {
     char *s;
 
+    init_completion();
     init_readline();
 
     while(1) {
