@@ -23,8 +23,9 @@ void init_completion () {
     DIR *dir;
     struct dirent *entry;
     char *var_path = getenv("PATH");
-    char *path, *buf;
+    char *path, *buf, *pathname;
     char *saveptr1, *saveptr2;
+    struct stat stat_buf, stat_buf2;
 
     nb_completions = 0;
     for (int i = 0; i < MAX_COMPLETION; i++)
@@ -34,21 +35,31 @@ void init_completion () {
 	     path = strtok_r(0, ":", &saveptr1)) {
 	if (!path) break;
 	
-	struct stat stat_buf;
 	if (stat(path, &stat_buf) == 0) {
 	    if (S_ISDIR(stat_buf.st_mode)) {
 		
 		if ((dir = opendir(path))) {
-		    while ((entry = readdir(dir)) && nb_completions < MAX_COMPLETION)
-			if (entry->d_type == DT_REG) { // TODO: check exec
-			    buf = malloc(sizeof(char) * 256); // assert ok
-			    strncpy(buf, entry->d_name, 255);
-			    completions[nb_completions++] = buf;
+		    while (nb_completions < MAX_COMPLETION &&
+			   (entry = readdir(dir)))
+			if (entry->d_type == DT_REG) { // TODO: check if exec
+			    pathname = malloc(sizeof(char) * 512);
+			    strncpy(pathname, path, 256);
+			    strcat(pathname, "/");
+			    strncat(pathname, entry->d_name, 256);
+
+			    if(stat(pathname, &stat_buf2) == 0 &&
+			       stat_buf2.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH)) {
+				buf = malloc(sizeof(char) * 256);
+				strncpy(buf, entry->d_name, 255);
+				completions[nb_completions++] = buf;
+			    }
 			}
 		} else fprintf(stderr, "Can't open %s", path);
 
 		closedir(dir);
-	    } else if (nb_completions < MAX_COMPLETION) {
+	    } else if (nb_completions < MAX_COMPLETION &&
+		       S_ISREG(stat_buf.st_mode) &&
+		       stat_buf.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH)) {
 		char *name, *tmp;
 		for (tmp = strtok_r(path, "/", &saveptr2); tmp; path = 0,
 			 tmp = strtok_r(0, "/", &saveptr2))
