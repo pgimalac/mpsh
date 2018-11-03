@@ -120,6 +120,8 @@ void command_line_handler (char* input) {
     command_queue* queue;
     command_node* n;
 
+    if (!input) return;
+    
     queue = command_parser(input);
     while (remain_command(queue)) {
 	n = get(queue);

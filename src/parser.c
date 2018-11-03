@@ -84,7 +84,7 @@ command_queue *command_parser (char *str) {
     int argc;
     char *argv[MAX_ARGV];
     command_queue *queue;
-
+    
     queue = create_queue();
 
     for (buf_semi = strtok_r(str, ";", &saveptr1); buf_semi;
