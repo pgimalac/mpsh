@@ -101,8 +101,23 @@ command_queue *command_parser (char *str) {
 	    } else if (strcmp(buf, ">") == 0) {
 		add(queue, REDL, create_command(argc, argv));
 		argc = 0;
+	    } else if (strcmp(buf, ">>") == 0) {
+		add(queue, DREDL, create_command(argc, argv));
+		argc = 0;
+	    } else if (strcmp(buf, "1>") == 0) {
+		add(queue, REDL1, create_command(argc, argv));
+		argc = 0;
+	    } else if (strcmp(buf, "2>") == 0) {
+		add(queue, REDL2, create_command(argc, argv));
+		argc = 0;
 	    } else if (strcmp(buf, "<") == 0) {
 		add(queue, REDR, create_command(argc, argv));
+		argc = 0;
+	    } else if (strcmp(buf, "<<") == 0) {
+		add(queue, DREDR, create_command(argc, argv));
+		argc = 0;
+	    } else if (strcmp(buf, "|") == 0) {
+		add(queue, PIPE, create_command(argc, argv));
 		argc = 0;
 	    } else {
 		char* v = malloc(sizeof(buf));

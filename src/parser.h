@@ -25,7 +25,12 @@ enum b_type
      AND,
      OR,
      REDL,
+     DREDL,
+     REDL1,
+     REDL2,
      REDR,
+     DREDR,
+     PIPE,
      SEMI
     };
 
