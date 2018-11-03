@@ -53,6 +53,8 @@ void init_completion () {
 				strncpy(buf, entry->d_name, 255);
 				completions[nb_completions++] = buf;
 			    }
+
+			    free(pathname);
 			}
 		} else fprintf(stderr, "Can't open %s", path);
 
