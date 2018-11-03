@@ -75,3 +75,6 @@ short remain_command (command_queue *queue);
  * Create a queue of commands from the string given by the user
  */
 command_queue *command_parser (char *str);
+
+
+void free_command_node(command_node *node);

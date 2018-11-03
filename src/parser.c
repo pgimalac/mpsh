@@ -74,6 +74,14 @@ command_node* get (command_queue *queue) {
     return ret;
 }
 
+void free_command_node (command_node *node) {
+    for (int i = 0; i < node->cmd->argc; i++)
+	free(node->cmd->argv[i]);
+    free(node->cmd->argv);
+    free(node->cmd);
+    free(node);
+}
+
 short remain_command(command_queue *queue) {
     return queue->first != 0;
 }

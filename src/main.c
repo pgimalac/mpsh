@@ -132,8 +132,12 @@ void command_line_handler (char* input) {
 		exit(1);
 	    }
 	}
+
 	wait(0);
+	free_command_node(n);
     }
+
+    free(queue);
 }
 
 
