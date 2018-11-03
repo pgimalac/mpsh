@@ -1,5 +1,5 @@
 NAME = mpsh
-FILES = src/main.c
+FILES = src/parser.c src/main.c
 LDLIBS = -lreadline
 
 OBJ = $(FILES:%.c=%.o)

@@ -2,11 +2,17 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <errno.h>
+
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
 #include <dirent.h>
+
 #include <readline/readline.h>
 #include <readline/history.h>
+
+#include "parser.h"
 
 char *dupstr(char *s){
     char *r = malloc(strlen(s)+1);
@@ -110,8 +116,22 @@ int init_readline() {
     return 0;
 }
 
-void command_line_handler () {
-    // TODO: fill with stuffs
+void command_line_handler (char* input) {
+    command_queue* queue;
+    command_node* n;
+
+    queue = command_parser(input);
+    while (remain_command(queue)) {
+	n = get(queue);
+
+	if (fork() == 0) {
+	    if (execvp(n->cmd->argv[0], n->cmd->argv) == -1) {
+	        perror("Error");
+		exit(1);
+	    }
+	}
+	wait(0);
+    }
 }
 
 
