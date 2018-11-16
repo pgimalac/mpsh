@@ -12,7 +12,10 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 
+#include "parsing.h"
 #include "parser.h"
+
+extern FILE *yyin;
 
 char *dupstr(char *s){
     char *r = malloc(strlen(s)+1);
@@ -117,27 +120,24 @@ int init_readline() {
 }
 
 void command_line_handler (char* input) {
-    command_queue* queue;
-    command_node* n;
+    cmd_t *cmd;
 
     if (!input) return;
-    
-    queue = command_parser(input);
-    while (remain_command(queue)) {
-	n = get(queue);
+    yyin = fmemopen(input, strlen(input), "r");
 
-	if (fork() == 0) {
-	    if (execvp(n->cmd->argv[0], n->cmd->argv) == -1) {
-	        perror("Error");
-		exit(1);
-	    }
-	}
-
-	wait(0);
-	free_command_node(n);
+    if (yyparse() != 0) {
+	return;
     }
 
-    free(queue);
+    cmd = yylval.cmd;
+    switch (cmd->type) {
+    FRA:
+        printf("frag\n");
+	break;
+    default:
+	printf("def\n");
+	break;
+    }
 }
 
 
@@ -146,11 +146,12 @@ int main (void) {
 
     init_completion();
     init_readline();
-
+    
     while(1) {
-	s = readline ("mpsh> ");
-	command_line_handler(s);
-	free(s);
+    	s = readline ("mpsh> ");
+    	command_line_handler(s);
+	add_history(s);
+    	free(s);
     }
     
     return 0;
