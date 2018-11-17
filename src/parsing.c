@@ -24,11 +24,37 @@ create_cmd_f (int argc, char **argv) {
     return f;
 }
 
+struct redir *
+create_redir (redir_t type, int fd1, int fd2) {
+    struct redir *red = malloc(sizeof(struct redir));
+    if (red) {
+	red->type = type;
+	red->fd1 = fd1;
+	red->fd2 = fd2;
+    }
+
+    return red;
+}
+
 struct cmd_b *
-create_cmd_b (enum bin_op op, cmd_t *left, cmd_t *right) {
+create_cmd_b (bin_op op, cmd_t *left, cmd_t *right) {
     struct cmd_b *b = malloc(sizeof(struct cmd_b));
     if (b) {
-	b->op = op;
+	b->type = op;
+	b->redir = 0;
+	b->left = left;
+	b->right = right;
+    }
+
+    return b;
+}
+
+struct cmd_b *
+create_cmd_redir (struct redir *red, cmd_t *left, cmd_t *right) {
+    struct cmd_b *b = malloc(sizeof(struct cmd_b));
+    if (b) {
+	b->type = REDIR;
+	b->redir = red;
 	b->left = left;
 	b->right = right;
     }

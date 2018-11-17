@@ -15,7 +15,8 @@
 #include "parsing.h"
 #include "parser.h"
 
-extern FILE *yyin;
+extern int yy_scan_string(const char *);
+extern cmd_t *parse_ret;
 
 char *dupstr(char *s){
     char *r = malloc(strlen(s)+1);
@@ -104,7 +105,7 @@ char *command_generator (const char *com, int num){
 char ** fileman_completion (const char *com, int start, int end) {
     char **matches;
     matches = (char **)NULL;
-    end = end; // remove Werror=unused-parameter
+    end = end;
 
     if (start == 0)
 	matches = rl_completion_matches (com, command_generator);
@@ -119,27 +120,49 @@ int init_readline() {
     return 0;
 }
 
-void command_line_handler (char* input) {
-    cmd_t *cmd;
-
-    if (!input) return;
-    yyin = fmemopen(input, strlen(input), "r");
-
-    if (yyparse() != 0) {
-	return;
-    }
-
-    cmd = yylval.cmd;
+void print_cmd (cmd_t *cmd) {
+    if (!cmd) return;
     switch (cmd->type) {
-    FRA:
-        printf("frag\n");
+    case FRA:
+	printf("frag: ");
+        for (int i = 0; i < cmd->cmd_f->argc; i++)
+	    printf("%s ", cmd->cmd_f->argv[i]);
+	printf("\n");
+	break;
+    case BIN:
+	switch (cmd->cmd_b->type) {
+	case REDIR:
+	    printf("redir %d from %d to %d\n",
+		   cmd->cmd_b->redir->type,
+		   cmd->cmd_b->redir->fd1,
+		   cmd->cmd_b->redir->fd2);
+	    break;
+	default:
+	    printf("bin %d\n", cmd->cmd_b->type);
+	}
+	print_cmd(cmd->cmd_b->left);
+	print_cmd(cmd->cmd_b->right);
+	break;
+    case VAR:
+	printf("var\n");
 	break;
     default:
-	printf("def\n");
-	break;
+	printf("unknow\n");
     }
 }
 
+void command_line_handler (char* input) {
+    if (!input) return;
+
+    char *dest = malloc(strlen(input) + 2);
+    strcpy(dest, input);
+    strcat(dest, " ");
+    
+    yy_scan_string(dest);
+    if (yyparse() != 0) return;
+
+    print_cmd(parse_ret);
+}
 
 int main (void) {
     char *s;

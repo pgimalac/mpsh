@@ -12,74 +12,56 @@
     extern void yyerror(char *s);
     int yywrap () { return 1; }
     
-    struct partial {
-	enum bin_op op;
-	cmd_t *cmd;
-    };
-    
-    struct partial *create_partial (enum bin_op op, cmd_t *cmd) {
-	struct partial *p = malloc(sizeof(struct partial));
-	if (p) {
-	    p->op = op;
-	    p->cmd = cmd;
-	}
-	
-	return p;
-    }
+    cmd_t* parse_ret;
 %}
 
 %define api.token.prefix {TOK_}
 %union {
     cmd_t *cmd;
-    struct partial *p;
     struct cmd_f *frag;
-    enum bin_op op;
+    struct var_d *var;
+    struct redir *red;
+    bin_op op;
 }
 
-%token <frag> FRAG "frag"
-%token <op> BINOP "op"
-%token <op> REDIR "red"
+%token <var> VAR
+%token <frag> FRAG
+%left <op> BINOP
+%left <op> PIPE
+%left <red> REDIR REDIR_SIMPLE
 %token SEMICOLON
-%token EQ
 %token ERROR
 
 %type <cmd> input
-%type <p> cmd
-%type <p> cmd2
-
-%left BINOP
-%left REDIR
+%type <cmd> cmd cmd_simple
 
 %start input
 
 %%
 
 input:
-%empty { $$ = NULL; }
-| FRAG cmd {
-    if ($2) {
-	$$ = create_cmd_with_bin_op
-	    (create_cmd_b(($2)->op, create_cmd_with_frag($1), ($2)->cmd));
-    } else {
-	$$ = create_cmd_with_frag($1);
-    }
- }
-| ERROR { YYERROR; }
+cmd			{ parse_ret = $1; }
 ;
 
 cmd:
-SEMICOLON input { $$ = create_partial(SEMI, $2); }
-| cmd2 { $$ = $1; }
+  VAR			{ $$ = create_cmd_with_var_def($1); }
+| cmd_simple            { $$ = $1; }
+| cmd PIPE cmd		{ $$ = create_cmd_with_bin_op(create_cmd_b($2, $1, $3)); }
+| cmd BINOP cmd		{ $$ = create_cmd_with_bin_op(create_cmd_b($2, $1, $3)); }
+| cmd SEMICOLON cmd	{ $$ = create_cmd_with_bin_op(create_cmd_b(SEMI, $1, $3)); }
+| error			{ return 1; }
 ;
 
-cmd2:
-%empty { $$ = NULL; }
-| BINOP input { $$ = create_partial($1, $2); }
-| REDIR input { $$ = create_partial($1, $2); }
-| error { YYERROR; }
+cmd_simple:
+%empty                { $$ = 0; }
+| FRAG { $$ = create_cmd_with_frag($1); }
+| REDIR_SIMPLE cmd_simple
+{ $$ = create_cmd_with_bin_op(create_cmd_redir($1, 0, $2)); }
+| cmd_simple REDIR cmd_simple
+{ $$ = create_cmd_with_bin_op(create_cmd_redir($2, $1, $3)); }
 ;
 
 %%
 void yyerror(char *s) {
-    fprintf(stderr, s);
+    fprintf(stderr, "mpsh: %s\n", s);
 }

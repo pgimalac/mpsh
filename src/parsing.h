@@ -15,7 +15,7 @@ struct cmd_f {
     char **argv;
 };
 
-enum bin_op {
+typedef enum {
       REDIR_WRITE,		/* > */
       REDIR_APP,		/* >> */
       REDIR_ERRWRITE,		/* &>, >& */
@@ -25,23 +25,35 @@ enum bin_op {
       REDIR_MERGEIN,		/* <&n */
       REDIR_MERGEOUT,		/* >&n */
       REDIR_CLOSE,		/* >&-, <&- */
-      PIPE,                     /* | */
-      AND,                      /* && */
-      OR,                       /* || */
-      SEMI                      /* ; */
+} redir_t;
+
+struct redir {
+    int fd1, fd2;
+    redir_t type;
 };
+
+typedef enum 
+    {
+     REDIR,
+     PIPE,                     /* | */
+     AND,                      /* && */
+     OR,                       /* || */
+     SEMI                      /* ; or \n */
+    } bin_op;
 
 struct cmd_b {
-    enum bin_op op;
+    struct redir *redir;
     struct cmd *left, *right;
+
+    bin_op type;
 };
 
-enum cmd_type
+typedef enum
     {
      BIN,
      FRA,
      VAR
-    };
+    } cmd_type;
 
 typedef struct cmd {
     union {
@@ -50,7 +62,7 @@ typedef struct cmd {
 	struct cmd_b *cmd_b;
     };
 
-    enum cmd_type type;
+    cmd_type type;
 } cmd_t;
 
 struct var_d *
@@ -59,8 +71,14 @@ create_var_d (char *name, char *value);
 struct cmd_f *
 create_cmd_f (int argc, char **argv);
 
+struct redir *
+create_redir (redir_t type, int fd1, int fd2);
+
 struct cmd_b *
-create_cmd_b (enum bin_op op, cmd_t *left, cmd_t *right);
+create_cmd_b (bin_op op, cmd_t *left, cmd_t *right);
+
+struct cmd_b *
+create_cmd_redir (struct redir *red, cmd_t *left, cmd_t *right);
 
 cmd_t *
 create_cmd_with_frag (struct cmd_f *f);

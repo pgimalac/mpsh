@@ -3,6 +3,7 @@ ws      [ \t]+
 special [._\-/$]
 alpha   [A-Za-z]
 dig     [0-9]
+var_id  {alpha}({alpha}|{dig})*
 ident   ({alpha}|{dig}|{special})+
 
 %{
@@ -18,58 +19,74 @@ ident   ({alpha}|{dig}|{special})+
 %%
 {ws} // skip
 
-{ident}({ws}{ident})*{ws}* {
-    int argc, size;
-    char *buf;
-    char **argv;
+{dig}">&"{dig} {
+    int fd1, fd2;
 
-    size = 4;
-    argc = 0;
-    argv = malloc(sizeof(char) * size);
+    fd1 = yytext[0] - '0';
+    fd2 = yytext[3] - '0';
+    yylval.red = create_redir(REDIR_MERGEOUT, fd1, fd2);
+    return TOK_REDIR;
+}
 
-    for (buf = strtok(yytext, " "); buf; buf = strtok(0, " ")) {
-	if (argc == size) {
-	    size *= 2;
-	    argv = realloc(argv, size);
-	}
+">&"{dig} {
+    int fd;
 
-	argv[argc++] = buf;
-    }
+    fd = yytext[2] - '0';
+    yylval.red = create_redir(REDIR_MERGEOUT, 1, fd);
+    return TOK_REDIR;
+}
 
-    argv = realloc(argv, argc);
-    yylval.frag = create_cmd_f(argc, argv);
-    
-    return TOK_FRAG;
+{dig}">" {
+    int fd = yytext[0] - '0';
+    yylval.red = create_redir(REDIR_WRITE, fd, 0);
+    return TOK_REDIR;
 }
 
 ">" {
-    yylval.op = REDIR_WRITE;
+    yylval.red = create_redir(REDIR_WRITE, 1, 0);
     return TOK_REDIR;
 }
 
 ">>" {
-    yylval.op = REDIR_APP;
+    yylval.red = create_redir(REDIR_APP, 1, 0);
     return TOK_REDIR;
 }
 
 "<>" {
-    yylval.op = REDIR_READWRITE;
+    yylval.red = create_redir(REDIR_READWRITE, 1, 0);
     return TOK_REDIR;
 }
 
 "<" {
-    yylval.op = REDIR_READ;
+    yylval.red = create_redir(REDIR_READ, 1, 0);
+    return TOK_REDIR;
+}
+
+{dig}"<&"{dig} {
+    int fd1, fd2;
+
+    fd1 = yytext[0] - '0';
+    fd2 = yytext[3] - '0';
+    yylval.red = create_redir(REDIR_MERGEIN, fd1, fd2);
+    return TOK_REDIR;
+}
+
+"<&"{dig} {
+    int fd;
+
+    fd = yytext[2] - '0';
+    yylval.red = create_redir(REDIR_MERGEIN, 1, fd);
     return TOK_REDIR;
 }
 
 "<<" {
-    yylval.op = REDIR_HEREDOC;
+    yylval.red = create_redir(REDIR_HEREDOC, 1, 0);
     return TOK_REDIR;
 }
 
 "|" {
     yylval.op = PIPE;
-    return TOK_REDIR;
+    return TOK_PIPE;
 }
 
 "&&" {
@@ -86,11 +103,38 @@ ident   ({alpha}|{dig}|{special})+
     return TOK_SEMICOLON;
 }
 
-"=" {
-    return TOK_EQ;
+{var_id}"="{ident} {
+    char *name = strtok(yytext, "=");
+    char *value = strtok(0, "=");
+    yylval.var = create_var_d(name, value);
+    return TOK_VAR;
+}
+
+{ident}({ws}{ident})*{ws} {
+    int argc, size;
+    char *buf;
+    char **argv;
+
+    size = 4;
+    argc = 0;
+
+    argv = malloc(sizeof(char *) * size);
+
+    for (buf = strtok(yytext, " "); buf; buf = strtok(0, " ")) {
+	if (argc == size) {
+	    size *= 2;
+	    argv = realloc(argv, sizeof(char *) * size);
+	}
+
+	argv[argc++] = buf;
+    }
+
+    argv = realloc(argv, sizeof(char *) * argc);
+    yylval.frag = create_cmd_f(argc, argv);
+    return TOK_FRAG;
 }
 
 . { 
-    yyerror("unexpected character\n");
+    fprintf(stderr, "mpsh: unexpexted character %s\n", yytext);
     return TOK_ERROR;
 }
