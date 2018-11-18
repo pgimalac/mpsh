@@ -8,7 +8,7 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 
-#include "arrayList.h"
+#include "array.h"
 
 char *dupstr(char *s){
   char *r = malloc(strlen(s) + 1);
@@ -121,49 +121,48 @@ void command_line_handler () {
 
 
 int main (void) {
-  arrayList *a = malloc(sizeof(arrayList));
-  arrayList_init(a);
+  array *a = array_init();
 
-  printf("1 : %d\n", arrayList_add(a, "a")); // 1
-  printf("2 : %d\n", arrayList_add(a, "b")); // 2
-  printf("3 : %d\n", arrayList_add(a, "c")); // 3
-  printf("4 : %d\n", arrayList_add(a, "d")); // 4
-  printf("5 : %d\n", arrayList_add(a, "e")); // 5
-  printf("6 : %d\n", arrayList_add(a, "f")); // 6
-  printf("7 : %d\n", arrayList_add(a, "g")); // 7
-  printf("8 : %d\n", arrayList_add(a, "h")); // 8
-  printf("9 : %d\n", arrayList_add(a, "i")); // 9
-  printf("10 : %d\n", arrayList_add(a, "j")); // 10
-  printf("11 : %d\n", arrayList_add(a, "k")); // 11
-  printf("12 : %d\n", arrayList_add(a, "l")); // 12
-  printf("13 : %d\n", arrayList_add(a, "m")); // 13
-  printf("14 : %d\n", arrayList_add(a, "n")); // 14
-  printf("15 : %d\n", arrayList_add(a, "o")); // 15
-  printf("16 : %d\n", arrayList_add(a, "p")); // 16
-  printf("17 : %d\n", arrayList_add(a, "q")); // 17
-  printf("18 : %d\n", arrayList_add(a, "r")); // 18
-  printf("19 : %d\n", arrayList_add(a, "s")); // 19
-  printf("20 : %d\n", arrayList_add(a, "t")); // 20
-  printf("21 : %d\n", arrayList_add(a, "u")); // 21
-  printf("22 : %d\n", arrayList_add(a, "v")); // 22
-  printf("23 : %d\n", arrayList_add(a, "w")); // 23
-  printf("24 : %d\n", arrayList_add(a, "x")); // 24
-  printf("25 : %d\n", arrayList_add(a, "y")); // 25
-  printf("26 : %d\n", arrayList_add(a, "z")); // 26
+  printf("1 : %d\n", array_add(a, "a")); // 1
+  printf("2 : %d\n", array_add(a, "b")); // 2
+  printf("3 : %d\n", array_add(a, "c")); // 3
+  printf("4 : %d\n", array_add(a, "d")); // 4
+  printf("5 : %d\n", array_add(a, "e")); // 5
+  printf("6 : %d\n", array_add(a, "f")); // 6
+  printf("7 : %d\n", array_add(a, "g")); // 7
+  printf("8 : %d\n", array_add(a, "h")); // 8
+  printf("9 : %d\n", array_add(a, "i")); // 9
+  printf("10 : %d\n", array_add(a, "j")); // 10
+  printf("11 : %d\n", array_add(a, "k")); // 11
+  printf("12 : %d\n", array_add(a, "l")); // 12
+  printf("13 : %d\n", array_add(a, "m")); // 13
+  printf("14 : %d\n", array_add(a, "n")); // 14
+  printf("15 : %d\n", array_add(a, "o")); // 15
+  printf("16 : %d\n", array_add(a, "p")); // 16
+  printf("17 : %d\n", array_add(a, "q")); // 17
+  printf("18 : %d\n", array_add(a, "r")); // 18
+  printf("19 : %d\n", array_add(a, "s")); // 19
+  printf("20 : %d\n", array_add(a, "t")); // 20
+  printf("21 : %d\n", array_add(a, "u")); // 21
+  printf("22 : %d\n", array_add(a, "v")); // 22
+  printf("23 : %d\n", array_add(a, "w")); // 23
+  printf("24 : %d\n", array_add(a, "x")); // 24
+  printf("25 : %d\n", array_add(a, "y")); // 25
+  printf("26 : %d\n", array_add(a, "z")); // 26
 
-  printf("%d\n", arrayList_removeIndex(a, 25)); // z
-  printf("%d\n", arrayList_removeIndex(a, 0));  // a
-  printf("%d\n", arrayList_removeIndex(a, 14)); // n
+  printf("%d\n", array_removeIndex(a, 25)); // z
+  printf("%d\n", array_removeIndex(a, 0));  // a
+  printf("%d\n", array_removeIndex(a, 14)); // n
 
-  printf("%d\n", arrayList_remove(a, "b"));
-  printf("%d\n", arrayList_remove(a, "y"));
-  printf("%d\n", arrayList_remove(a, "c"));
+  printf("%d\n", array_remove(a, "b"));
+  printf("%d\n", array_remove(a, "y"));
+  printf("%d\n", array_remove(a, "c"));
 
-  printf("%d\n", arrayList_set(a, 0, "hello "));
-  printf("%d\n", arrayList_set(a, 5, "world "));
-  printf("%d\n", arrayList_set(a, 17, "!"));
+  printf("%d\n", array_set(a, 0, "hello "));
+  printf("%d\n", array_set(a, 5, "world "));
+  printf("%d\n", array_set(a, 17, "!"));
 
-  printf("%d\n", arrayList_contains(a, "n"));
+  printf("%d\n", array_contains(a, "n"));
   for (int i = 0; i < a->size; i++)
     printf("%s\n", a->tab[i]);
   printf("\n");
