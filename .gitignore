@@ -1,2 +1,4 @@
 mpsh
 *.o
+*.sublime-project
+*.sublime-workspace
