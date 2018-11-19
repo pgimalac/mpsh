@@ -1,13 +1,12 @@
 #include "list.h"
 
 list_t* list_init(void *v){
-    list_t* l;
-    if ((l = malloc(sizeof(list_t))))
-        l->val = v;
+    list_t* l = malloc(sizeof(list_t));
+    if (l) l->val = v;
     return l;
 }
 
-list_t* list_addFirst(list_t* l, void* s){
+list_t* list_add(list_t* l, void* s){
     list_t* e = list_init(s);
     e->next = l;
     return e;
