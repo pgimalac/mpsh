@@ -8,7 +8,7 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 
-#include "hashset.h"
+#include "list.h"
 
 char *dupstr(char *s){
   char *r = malloc(strlen(s) + 1);
@@ -121,46 +121,40 @@ void command_line_handler () {
 
 
 int main (void) {
-  hashset_t *l = hashset_init();
+  list_t *l = list_init("a", NULL);
 
-  printf("0 %d\n", hashset_add(l, "a")); // 1
-  printf("1 %d\n", hashset_add(l, "b")); // 2
-  printf("2 %d\n", hashset_add(l, "c")); // 3
-  printf("3 %d\n", hashset_add(l, "d")); // 4
-  printf("4 %d\n", hashset_add(l, "e")); // 5
-  printf("5 %d\n", hashset_add(l, "f")); // 6
-  printf("6 %d\n", hashset_add(l, "g")); // 7
-  printf("7 %d\n", hashset_add(l, "h")); // 8
-  printf("8 %d\n", hashset_add(l, "i")); // 9
-  printf("9 %d\n", hashset_add(l, "j")); // 10
-  printf("10 %d\n", hashset_add(l, "k")); // 11
-  printf("11 %d\n", hashset_add(l, "l")); // 12
-  printf("12 %d\n", hashset_add(l, "m")); // 13
-  printf("13 %d\n", hashset_add(l, "n")); // 14
-  printf("14 %d\n", hashset_add(l, "o")); // 15
-  printf("15 %d\n", hashset_add(l, "p")); // 16
-  printf("16 %d\n", hashset_add(l, "q")); // 17
-  printf("17 %d\n", hashset_add(l, "r")); // 18
-  printf("18 %d\n", hashset_add(l, "s")); // 19
-  printf("19 %d\n", hashset_add(l, "t")); // 20
-  printf("20 %d\n", hashset_add(l, "u")); // 21
-  printf("21 %d\n", hashset_add(l, "v")); // 22
-  printf("22 %d\n", hashset_add(l, "w")); // 23
-  printf("23 %d\n", hashset_add(l, "x")); // 24
-  printf("24 %d\n", hashset_add(l, "y")); // 25
-  printf("25 %d\n", hashset_add(l, "z")); // 26
+  printf("1 %d\n", list_add(&l, "b")); // 2
+  printf("2 %d\n", list_add(&l, "c")); // 3
+  printf("3 %d\n", list_add(&l, "d")); // 4
+  printf("4 %d\n", list_add(&l, "e")); // 5
+  printf("5 %d\n", list_add(&l, "f")); // 6
+  printf("6 %d\n", list_add(&l, "g")); // 7
+  printf("7 %d\n", list_add(&l, "h")); // 8
+  printf("8 %d\n", list_add(&l, "i")); // 9
+  printf("9 %d\n", list_add(&l, "j")); // 10
+  printf("10 %d\n", list_add(&l, "k")); // 11
+  printf("11 %d\n", list_add(&l, "l")); // 12
+  printf("12 %d\n", list_add(&l, "m")); // 13
+  printf("13 %d\n", list_add(&l, "n")); // 14
+  printf("14 %d\n", list_add(&l, "o")); // 15
+  printf("15 %d\n", list_add(&l, "p")); // 16
+  printf("16 %d\n", list_add(&l, "q")); // 17
+  printf("17 %d\n", list_add(&l, "r")); // 18
+  printf("18 %d\n", list_add(&l, "s")); // 19
+  printf("19 %d\n", list_add(&l, "t")); // 20
+  printf("20 %d\n", list_add(&l, "u")); // 21
+  printf("21 %d\n", list_add(&l, "v")); // 22
+  printf("22 %d\n", list_add(&l, "w")); // 23
+  printf("23 %d\n", list_add(&l, "x")); // 24
+  printf("24 %d\n", list_add(&l, "y")); // 25
+  printf("25 %d\n", list_add(&l, "z")); // 26
 
-  printf("%d\n", hashset_remove(l, "a")); // z
-  printf("%d\n", hashset_remove(l, "f"));  // a
-  printf("%d\n", hashset_remove(l, "z")); // n
+  printf("%d\n", list_remove(&l, 0)); // z
+  printf("%d\n", list_remove(&l, 24));  // a
+  printf("%d\n", list_remove(&l, 15)); // n
 
-  printf("%d\n", hashset_contains(l, "hello "));
-  printf("%d\n", hashset_contains(l, "world "));
-  printf("%d\n", hashset_contains(l, "b"));
-
-  for (int i = 0; i < l->capacity; i++)
-    for (list_t* t = l->tab[i]; t != NULL; t = t->next)
-      printf("%s\n", (char*)t->val);
+  for (list_t* li = l; li != NULL; li = li->next)
+    printf("%s\n", (char*)li->val);
 
 /*  char *s;
 

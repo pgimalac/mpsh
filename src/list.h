@@ -8,24 +8,27 @@ typedef struct list_t {
 } list_t;
 
 /**
- * Create a new linked list with one element
+ * Create a new linked list whose first element is given by the arguments
  */
-list_t* list_init(void* v);
+list_t* list_init(void*, list_t*);
 
 /**
  * Add element at the head of the list
+ * Return if it succeeded
  */
-list_t* list_add(list_t*, void*);
+short list_add(list_t**, void*);
 
 /**
  * Remove the given index of the list
+ * Return if it succeeded
  */
-list_t* list_remove(list_t*, int);
+short list_remove(list_t**, int);
 
 /**
  * Change the value of the given index of the list
+ * Return if it succeeded
  */
-void list_set(list_t*, int, void*);
+short list_set(list_t*, int, void*);
 
 /**
  * Return the size of the list
