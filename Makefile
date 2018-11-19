@@ -1,28 +1,48 @@
 NAME = mpsh
-FILES = src/parsing.c src/lexer.c src/parser.c src/main.c
-LDLIBS = -lreadline -ll
+
+FOLDER_SRC = src/
+FOLDER_LP = src/lp/
+ALL_FOLDERS = $(FOLDER_SRC) $(FOLDER_LP)
+
+FILES_SRC = parsing.c main.c
+FILES_LP = lexer.c parser.c
+FILES_YF = lexer.l parser.y
+
+FILES_SRC_FP = $(addprefix $(FOLDER_SRC), $(FILES_SRC))
+FILES_LP_FP = $(addprefix $(FOLDER_LP), $(FILES_LP))
+FILES_YP_FP = $(addprefix $(FOLDER_LP), $(FILES_YF))
+
+FILES = $(FILES_SRC_FP) $(FILES_LP_FP)
+
+LDLIBS = -lreadline
+LDLIBS_OBJ = -ll
 
 OBJ = $(FILES:%.c=%.o)
+TOT_C = $(words FILES)
+
+DEPNAME = $(FILES_YF_FP) $(OBJ)
 
 CC = gcc
-FLAGS = -Wall -Wextra -g
+LEX = lex
+YACC = yacc
+FLAGS = -Wall -Wextra -g $(foreach d, $(ALL_FOLDERS), -I $(d))
 
-all: gen $(NAME) clean
+all: $(NAME)
 
-gen:
-	lex -t src/lexer.l > src/lexer.c
-	yacc -d src/parser.y -o src/parser.c
+%.c: %.l
+	$(LEX) -t $? > $@
+
+%.c: %.y
+	$(YACC) -d $? -o $@
 
 %.o: %.c
-	$(CC) $(FLAGS) -c $? -o $@ $(LDLIBS)
+	$(CC) $(FLAGS) -c $? -o $@ $(LDLIBS) $(LDLIBS_OBJ)
 
-$(NAME): $(OBJ)
-	$(CC) $(FLAGS) $(OBJ) -o $(NAME) -lreadline
+$(NAME): $(DEPNAME)
+	$(CC) $(FLAGS) $(OBJ) -o $(NAME) $(LDLIBS)
 
 clean:
 	rm -rf $(OBJ)
-	rm -rf src/lexer.c src/lexer.o
-	rm -rf src/parser.h src/parser.c src/parser.o
 
 fclean: clean
 	rm -rf $(NAME)
