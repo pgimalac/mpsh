@@ -30,7 +30,7 @@ static short array_resize(array_t* a, int capacity){
 
 short array_add(array_t* a, char* s){
     if (a != NULL && (a->size != a->capacity || array_resize(a, 2 * a->size))){
-        a->tab[(a->size)++] = s;
+        a->tab[a->size++] = s;
         return 1;
     }
     return 0;
