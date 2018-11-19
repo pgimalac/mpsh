@@ -39,7 +39,7 @@ static short resize(hashset_t* h, int capacity){
 
     for (int i = 0; i < h->capacity; i++, list_destroy(h->tab[i]))
         for (list_t* l = h->tab[i]; l != NULL; l = l->next)
-            t[i] = list_addFirst(t[i], l->val);
+            t[i] = list_add(t[i], l->val);
 
     free(h->tab);
     h->capacity = capacity;
@@ -61,7 +61,7 @@ short hashset_add(hashset_t* h, char* s){
         if(!hashset_contains(h, s)){
             if (h->size + 1 > HASHSET_RATIO_UPPER_LIMIT * h->capacity)
                 resize(h, h->capacity * 2);
-            h->tab[hash(s) % h->capacity] = list_addFirst(h->tab[hash(s) % h->capacity], s);
+            h->tab[hash(s) % h->capacity] = list_add(h->tab[hash(s) % h->capacity], s);
             h->size ++;
             return 1;
         }

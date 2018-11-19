@@ -18,7 +18,7 @@ array_t* array_init(){
 
 static short array_resize(array_t* a, int capacity){
     if (a != NULL){
-        char **tab = (char**)realloc(a->tab, sizeof(char *) * capacity);
+        char **tab = realloc(a->tab, sizeof(char *) * capacity);
         if (tab) {
             a->tab = tab;
             a->capacity = capacity;
@@ -36,7 +36,7 @@ short array_add(array_t* a, char* s){
     return 0;
 }
 
-short array_removeIndex(array_t* a, int i){
+short array_remove_index(array_t* a, int i){
     if (a == NULL || i < 0 || i >= a->size)
         return 0;
     --(a->size);
@@ -51,7 +51,7 @@ short array_remove(array_t* a, char* s){
     if (a != NULL)
         for (int i = 0; i < a->size; i++)
             if (strcmp(a->tab[i], s) == 0)
-                return array_removeIndex(a, i);
+                return array_remove_index(a, i);
     return 0;
 }
 
