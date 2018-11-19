@@ -1,5 +1,5 @@
 NAME = mpsh
-FILES = src/types.c src/parsing.c src/lexer.c src/parser.c src/main.c
+FILES = src/parsing.c src/lexer.c src/parser.c src/main.c
 LDLIBS = -lreadline -ll
 
 OBJ = $(FILES:%.c=%.o)
@@ -7,7 +7,7 @@ OBJ = $(FILES:%.c=%.o)
 CC = gcc
 FLAGS = -Wall -Wextra -g
 
-all: $(NAME)
+all: gen $(NAME) clean
 
 gen:
 	lex -t src/lexer.l > src/lexer.c
