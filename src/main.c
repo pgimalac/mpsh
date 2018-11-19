@@ -121,7 +121,7 @@ void command_line_handler () {
 
 
 int main (void) {
-  array *a = array_init();
+  array_t *a = array_init();
 
   printf("1 : %d\n", array_add(a, "a")); // 1
   printf("2 : %d\n", array_add(a, "b")); // 2

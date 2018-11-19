@@ -1,19 +1,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <string.h>
 
-#define ARRAY_INITIAL_CAPACITY 16
-
-typedef struct array {
+typedef struct array_t {
     int size, capacity; // size = number of element, capacity = real size
     char** tab;
-} array;
+} array_t;
 
-array* array_init();
-short array_add(array*, char*);
-short array_removeIndex(array*, int);
-short array_remove(array*, char*);
-short array_set(array*, int, char*);
-int array_size(array*);
-int array_index(array*, char*);
-short array_contains(array*, char*);
+array_t* array_init();
+short array_add(array_t*, char*);
+short array_removeIndex(array_t*, int);
+short array_remove(array_t*, char*);
+short array_set(array_t*, int, char*);
+int array_index(array_t*, char*);
+short array_contains(array_t*, char*);
+void array_destroy(array_t*);

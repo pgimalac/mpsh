@@ -1,81 +1,82 @@
 #include "array.h"
 
-array* array_init(){
-    array* a;
-    if (!(a = malloc(sizeof(array)))){
-        perror("Error creating an array.");
-        exit(EXIT_FAILURE);
-    }
+#define ARRAY_INITIAL_CAPACITY 16
 
-    a->size = 0;
-    a->capacity = ARRAY_INITIAL_CAPACITY;
+array_t* array_init(){
+    array_t* a;
+    if ((a = malloc(sizeof(array_t)))){
+        a->size = 0;
+        a->capacity = ARRAY_INITIAL_CAPACITY;
 
-    if ((a->tab = (char**)malloc(sizeof(char*) * a->capacity)))
-        return a;
-    else{
-        free(a);
-        perror("Error creating an array.");
-        exit(EXIT_FAILURE);
+        if (!(a->tab = (char**)malloc(sizeof(char*) * a->capacity))){
+            free(a);
+            a = NULL;
+        }
     }
+    return a;
 }
 
-static void array_resize(array* a, int capacity){
-    char **tab = (char**)realloc(a->tab, sizeof(char *) * capacity);
-    if (tab) {
-        a->tab = tab;
-        a->capacity = capacity;
-    } else {
-        perror("Error resizing an array : ");
-        exit(EXIT_FAILURE);
-    }
-}
-
-short array_add(array* a, char* s){
+static short array_resize(array_t* a, int capacity){
     if (a != NULL){
-        if (a->size == a->capacity)
-            array_resize(a, 2 * a->size);
+        char **tab = (char**)realloc(a->tab, sizeof(char *) * capacity);
+        if (tab) {
+            a->tab = tab;
+            a->capacity = capacity;
+            return 1;
+        }
+    }
+    return 0;
+}
+
+short array_add(array_t* a, char* s){
+    if (a != NULL && (a->size != a->capacity || array_resize(a, 2 * a->size))){
         a->tab[(a->size)++] = s;
         return 1;
     }
     return 0;
 }
 
-short array_removeIndex(array* a, int i){
+short array_removeIndex(array_t* a, int i){
     if (a == NULL || i < 0 || i >= a->size)
         return 0;
     --(a->size);
     for ( ; i < a->size ; i++)
         a->tab[i] = a->tab[i + 1];
+    if (a->capacity >= 4 * a->size && a->capacity > ARRAY_INITIAL_CAPACITY)
+        array_resize(a, a->capacity / 2);
     return 1;
 }
 
-short array_remove(array* a, char* s){
+short array_remove(array_t* a, char* s){
     if (a != NULL)
         for (int i = 0; i < a->size; i++)
-            if (a->tab[i] == s)
+            if (strcmp(a->tab[i], s) == 0)
                 return array_removeIndex(a, i);
     return 0;
 }
 
-short array_set(array* a, int i, char* s){
+short array_set(array_t* a, int i, char* s){
     if (a == NULL || i < 0 || i >= a->size)
         return 0;
     a->tab[i] = s;
     return 1;
 }
 
-int array_size(array* a){
-    return a == NULL ? 0 : a->size;
-}
-
-int array_index(array* a, char* s){
+int array_index(array_t* a, char* s){
     if (a != NULL)
         for (int i = 0; i < a->size; i++)
-            if (a->tab[i] == s)
+            if (strcmp(a->tab[i], s) == 0)
                 return i;
     return -1;
 }
 
-short array_contains(array* a, char* s){
+short array_contains(array_t* a, char* s){
     return array_index(a, s) != -1;
+}
+
+void array_destroy(array_t* a){
+    if (a != NULL){
+        free(a->tab);
+        free(a);
+    }
 }
