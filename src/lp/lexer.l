@@ -1,8 +1,9 @@
 ws      [ \t]+
 
-special [._\-/$]
+special [.~_\-/$]
 alpha   [A-Za-z]
 dig     [0-9]
+string  \"((\\.)|[^\"\\])*\"
 var_id  {alpha}({alpha}|{dig})*
 ident   ({alpha}|{dig}|{special})+
 
@@ -103,14 +104,14 @@ ident   ({alpha}|{dig}|{special})+
     return TOK_SEMICOLON;
 }
 
-{var_id}"="{ident} {
+{var_id}"="({ident}|{string}) {
     char *name = strtok(yytext, "=");
     char *value = strtok(0, "=");
     yylval.var = create_var_d(name, value);
     return TOK_VAR;
 }
 
-{ident}({ws}{ident})*{ws} {
+{ident}({ws}({ident}|{string}))*{ws} {
     int argc, size;
     char *buf;
     char **argv;
@@ -121,12 +122,12 @@ ident   ({alpha}|{dig}|{special})+
     argv = malloc(sizeof(char *) * size);
 
     for (buf = strtok(yytext, " "); buf; buf = strtok(0, " ")) {
-	if (argc == size) {
-	    size *= 2;
-	    argv = realloc(argv, sizeof(char *) * size);
-	}
+    	if (argc == size) {
+    	    size *= 2;
+    	    argv = realloc(argv, sizeof(char *) * size);
+    	}
 
-	argv[argc++] = buf;
+    	argv[argc++] = buf;
     }
 
     argv = realloc(argv, sizeof(char *) * argc);
@@ -134,7 +135,7 @@ ident   ({alpha}|{dig}|{special})+
     return TOK_FRAG;
 }
 
-. { 
+. {
     fprintf(stderr, "mpsh: unexpexted character %s\n", yytext);
     return TOK_ERROR;
 }

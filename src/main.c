@@ -40,14 +40,14 @@ void init_completion () {
     nb_completions = 0;
     for (int i = 0; i < MAX_COMPLETION; i++)
 	completions[i] = 0;
-    
-    for (path = strtok_r(var_path, ":", &saveptr1);; var_path = 0, 
+
+    for (path = strtok_r(var_path, ":", &saveptr1);; var_path = 0,
 	     path = strtok_r(0, ":", &saveptr1)) {
 	if (!path) break;
-	
+
 	if (stat(path, &stat_buf) == 0) {
 	    if (S_ISDIR(stat_buf.st_mode)) {
-		
+
 		if ((dir = opendir(path))) {
 		    while (nb_completions < MAX_COMPLETION &&
 			   (entry = readdir(dir)))
@@ -76,7 +76,7 @@ void init_completion () {
 		for (tmp = strtok_r(path, "/", &saveptr2); tmp; path = 0,
 			 tmp = strtok_r(0, "/", &saveptr2))
 		    name = tmp;
-		
+
 		completions[nb_completions++] = name;
 	    }
 	} else fprintf(stderr, "Can't open %s", path);
@@ -98,7 +98,7 @@ char *command_generator (const char *com, int num){
 	if (strncmp (completion, com, len) == 0)
 	    return dupstr(completion);
     }
-  
+
     return NULL;
 }
 
@@ -157,7 +157,7 @@ void command_line_handler (char* input) {
     char *dest = malloc(strlen(input) + 2);
     strcpy(dest, input);
     strcat(dest, " ");
-    
+
     yy_scan_string(dest);
     if (yyparse() != 0) return;
 
@@ -169,13 +169,13 @@ int main (void) {
 
     init_completion();
     init_readline();
-    
+
     while(1) {
     	s = readline ("mpsh> ");
     	command_line_handler(s);
 	add_history(s);
     	free(s);
     }
-    
+
     return 0;
 }
