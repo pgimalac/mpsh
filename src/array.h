@@ -48,3 +48,10 @@ short array_contains(array_t*, char*);
  * free pointer to array and all memory used by this one
  */
 void array_destroy(array_t*);
+
+/**
+ * Return the array and reallocate to have the exact size
+ * Free the given array_t (if the realloc succeded) because 
+ * assumed useless after conversion
+ */
+char** array_to_tab (array_t*);

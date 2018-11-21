@@ -80,3 +80,9 @@ void array_destroy(array_t* a){
         free(a);
     }
 }
+
+char **array_to_tab (array_t *array) {
+    char **ret = realloc(array->tab, sizeof(char *) * array->size);
+    if (ret) free(array);
+    return ret;
+}

@@ -9,6 +9,7 @@
 #include <readline/history.h>
 
 #include "list.h"
+#include "array.h"
 
 char *dupstr(char *s){
   char *r = malloc(strlen(s) + 1);
@@ -16,9 +17,7 @@ char *dupstr(char *s){
   return r;
 }
 
-#define MAX_COMPLETION 10000
-
-char *completions[MAX_COMPLETION];
+char **completions;
 int nb_completions;
 
 void init_completion () {
@@ -28,54 +27,48 @@ void init_completion () {
   char *path, *buf, *pathname;
   char *saveptr1, *saveptr2;
   struct stat stat_buf, stat_buf2;
+  array_t *array = array_init();
 
-  nb_completions = 0;
-  for (int i = 0; i < MAX_COMPLETION; i++)
-    completions[i] = 0;
+  for (path = strtok_r(var_path, ":", &saveptr1); path; var_path = 0,
+	   path = strtok_r(0, ":", &saveptr1)) {
 
-  for (path = strtok_r(var_path, ":", &saveptr1);; var_path = 0,
-     path = strtok_r(0, ":", &saveptr1)) {
+      if (stat(path, &stat_buf) == 0) {
+	  if (S_ISDIR(stat_buf.st_mode)) {
 
-    if (!path) break;
+	      if ((dir = opendir(path))) {
+		  while ((entry = readdir(dir)))
+		      if (entry->d_type == DT_REG) {
+			  pathname = malloc(sizeof(char) * 512);
+			  strncpy(pathname, path, 256);
+			  strcat(pathname, "/");
+			  strncat(pathname, entry->d_name, 256);
 
-    if (stat(path, &stat_buf) == 0) {
-      if (S_ISDIR(stat_buf.st_mode)) {
+			  if(stat(pathname, &stat_buf2) == 0 &&
+			     stat_buf2.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH)) {
 
-        if ((dir = opendir(path))) {
-          while (nb_completions < MAX_COMPLETION &&
-             (entry = readdir(dir)))
+			      buf = malloc(sizeof(char) * 256);
+			      strncpy(buf, entry->d_name, 255);
+			      array_add(array, buf);
+			  }
 
-            if (entry->d_type == DT_REG) { // TODO: check if exec
-              pathname = malloc(sizeof(char) * 512);
-              strncpy(pathname, path, 256);
-              strcat(pathname, "/");
-              strncat(pathname, entry->d_name, 256);
+			  free(pathname);
+		      }
+	      } else fprintf(stderr, "Can't open %s", path);
 
-              if(stat(pathname, &stat_buf2) == 0 &&
-                 stat_buf2.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH)) {
-
-                buf = malloc(sizeof(char) * 256);
-                strncpy(buf, entry->d_name, 255);
-                completions[nb_completions++] = buf;
-              }
-
-              free(pathname);
-            }
-        } else fprintf(stderr, "Can't open %s", path);
-
-        closedir(dir);
-      } else if (nb_completions < MAX_COMPLETION &&
-           S_ISREG(stat_buf.st_mode) &&
-           stat_buf.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH)) {
-        char *name, *tmp;
-        for (tmp = strtok_r(path, "/", &saveptr2); tmp; path = 0,
-           tmp = strtok_r(0, "/", &saveptr2))
-          name = tmp;
-
-        completions[nb_completions++] = name;
-      }
-    } else fprintf(stderr, "Can't open %s", path);
+	      closedir(dir);
+	  } else if (S_ISREG(stat_buf.st_mode) &&
+		     stat_buf.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH)) {
+	      char *name, *tmp;
+	      for (tmp = strtok_r(path, "/", &saveptr2); tmp; path = 0,
+		       tmp = strtok_r(0, "/", &saveptr2))
+		  name = tmp;
+	      array_add(array, name);
+	  }
+      } else fprintf(stderr, "Can't open %s", path);
   }
+
+  nb_completions = array->size;
+  completions = array_to_tab(array);
 }
 
 char *command_generator (const char *com, int num){
@@ -121,42 +114,42 @@ void command_line_handler () {
 
 
 int main (void) {
-  list_t *l = list_init("a", NULL);
+  /* list_t *l = list_init("a", NULL); */
 
-  printf("1 %d\n", list_add(&l, "b")); // 2
-  printf("2 %d\n", list_add(&l, "c")); // 3
-  printf("3 %d\n", list_add(&l, "d")); // 4
-  printf("4 %d\n", list_add(&l, "e")); // 5
-  printf("5 %d\n", list_add(&l, "f")); // 6
-  printf("6 %d\n", list_add(&l, "g")); // 7
-  printf("7 %d\n", list_add(&l, "h")); // 8
-  printf("8 %d\n", list_add(&l, "i")); // 9
-  printf("9 %d\n", list_add(&l, "j")); // 10
-  printf("10 %d\n", list_add(&l, "k")); // 11
-  printf("11 %d\n", list_add(&l, "l")); // 12
-  printf("12 %d\n", list_add(&l, "m")); // 13
-  printf("13 %d\n", list_add(&l, "n")); // 14
-  printf("14 %d\n", list_add(&l, "o")); // 15
-  printf("15 %d\n", list_add(&l, "p")); // 16
-  printf("16 %d\n", list_add(&l, "q")); // 17
-  printf("17 %d\n", list_add(&l, "r")); // 18
-  printf("18 %d\n", list_add(&l, "s")); // 19
-  printf("19 %d\n", list_add(&l, "t")); // 20
-  printf("20 %d\n", list_add(&l, "u")); // 21
-  printf("21 %d\n", list_add(&l, "v")); // 22
-  printf("22 %d\n", list_add(&l, "w")); // 23
-  printf("23 %d\n", list_add(&l, "x")); // 24
-  printf("24 %d\n", list_add(&l, "y")); // 25
-  printf("25 %d\n", list_add(&l, "z")); // 26
+  /* printf("1 %d\n", list_add(&l, "b")); // 2 */
+  /* printf("2 %d\n", list_add(&l, "c")); // 3 */
+  /* printf("3 %d\n", list_add(&l, "d")); // 4 */
+  /* printf("4 %d\n", list_add(&l, "e")); // 5 */
+  /* printf("5 %d\n", list_add(&l, "f")); // 6 */
+  /* printf("6 %d\n", list_add(&l, "g")); // 7 */
+  /* printf("7 %d\n", list_add(&l, "h")); // 8 */
+  /* printf("8 %d\n", list_add(&l, "i")); // 9 */
+  /* printf("9 %d\n", list_add(&l, "j")); // 10 */
+  /* printf("10 %d\n", list_add(&l, "k")); // 11 */
+  /* printf("11 %d\n", list_add(&l, "l")); // 12 */
+  /* printf("12 %d\n", list_add(&l, "m")); // 13 */
+  /* printf("13 %d\n", list_add(&l, "n")); // 14 */
+  /* printf("14 %d\n", list_add(&l, "o")); // 15 */
+  /* printf("15 %d\n", list_add(&l, "p")); // 16 */
+  /* printf("16 %d\n", list_add(&l, "q")); // 17 */
+  /* printf("17 %d\n", list_add(&l, "r")); // 18 */
+  /* printf("18 %d\n", list_add(&l, "s")); // 19 */
+  /* printf("19 %d\n", list_add(&l, "t")); // 20 */
+  /* printf("20 %d\n", list_add(&l, "u")); // 21 */
+  /* printf("21 %d\n", list_add(&l, "v")); // 22 */
+  /* printf("22 %d\n", list_add(&l, "w")); // 23 */
+  /* printf("23 %d\n", list_add(&l, "x")); // 24 */
+  /* printf("24 %d\n", list_add(&l, "y")); // 25 */
+  /* printf("25 %d\n", list_add(&l, "z")); // 26 */
 
-  printf("%d\n", list_remove(&l, 0)); // z
-  printf("%d\n", list_remove(&l, 24));  // a
-  printf("%d\n", list_remove(&l, 15)); // n
+  /* printf("%d\n", list_remove(&l, 0)); // z */
+  /* printf("%d\n", list_remove(&l, 24));  // a */
+  /* printf("%d\n", list_remove(&l, 15)); // n */
 
-  for (list_t* li = l; li != NULL; li = li->next)
-    printf("%s\n", (char*)li->val);
+  /* for (list_t* li = l; li != NULL; li = li->next) */
+  /*   printf("%s\n", (char*)li->val); */
 
-/*  char *s;
+  char *s;
 
   init_completion();
   init_readline();
@@ -166,6 +159,5 @@ int main (void) {
     command_line_handler(s);
     free(s);
   }
-*/
   return 0;
 }
