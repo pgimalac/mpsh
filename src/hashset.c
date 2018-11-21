@@ -89,7 +89,8 @@ short hashset_remove(hashset_t* h, char* s){
         int i = hash(s) % h->capacity;
         hashset_list_remove(&h->tab[i], s);
         h->size--;
-        if (h->size < HASHSET_RATIO_LOWER_LIMIT * h->capacity && h->size > HASHSET_INITIAL_CAPACITY)
+        if (h->size < HASHSET_RATIO_LOWER_LIMIT * h->capacity &&
+	    h->size > HASHSET_INITIAL_CAPACITY)
             resize(h, h->capacity / 2);
         return 1;
     }
