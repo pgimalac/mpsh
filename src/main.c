@@ -10,6 +10,7 @@
 
 #include "list.h"
 #include "array.h"
+#include "hashmap.h"
 
 char *dupstr(char *s){
   char *r = malloc(strlen(s) + 1);
@@ -149,15 +150,29 @@ int main (void) {
   /* for (list_t* li = l; li != NULL; li = li->next) */
   /*   printf("%s\n", (char*)li->val); */
 
-  char *s;
+    hashmap_t *map = hashmap_init();
 
-  init_completion();
-  init_readline();
+    hashmap_add(map, "PATH", "bonjour");
+    hashmap_add(map, "var1", "bonjour");
+    hashmap_add(map, "var2", "bonjour");
+    hashmap_add(map, "variable", "bonjour");
 
-  while(1) {
-    s = readline ("mpsh> ");
-    command_line_handler(s);
-    free(s);
-  }
-  return 0;
+    printf("-----\n");
+    hashmap_print(map);
+    hashmap_remove(map, "PATH");
+    printf("-----\n");
+    hashmap_print(map);
+    hashmap_destroy(map);
+    
+  /* char *s; */
+
+  /* init_completion(); */
+  /* init_readline(); */
+
+  /* while(1) { */
+  /*   s = readline ("mpsh> "); */
+  /*   command_line_handler(s); */
+  /*   free(s); */
+  /* } */
+  /* return 0; */
 }

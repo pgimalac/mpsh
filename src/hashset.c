@@ -39,7 +39,7 @@ static short resize(hashset_t* h, int capacity){
 
     for (int i = 0; i < h->capacity; list_destroy(h->tab[i]), i++)
         for (list_t* l = h->tab[i]; l != NULL; l = l->next)
-            list_add(&t[i], l->val);
+            list_add(&t[hash((char *)l->val) % capacity], l->val);
 
     free(h->tab);
     h->capacity = capacity;
@@ -49,23 +49,26 @@ static short resize(hashset_t* h, int capacity){
 }
 
 short hashset_contains(hashset_t* h, char* s){
-    if (h != NULL)
-        for (list_t* l = h->tab[hash(s) % h->capacity]; l != NULL; l = l->next)
-            if (strcmp(l->val, s) == 0)
-                return 1;
+    if (h == NULL) return 0;
+    
+    for (list_t* l = h->tab[hash(s) % h->capacity]; l != NULL; l = l->next)
+	if (strcmp(l->val, s) == 0)
+	    return 1;
+
     return 0;
 }
 
 short hashset_add(hashset_t* h, char* s){
-    if (h != NULL){
-        if(!hashset_contains(h, s)){
-            if (h->size + 1 > HASHSET_RATIO_UPPER_LIMIT * h->capacity)
-                resize(h, h->capacity * 2);
-            list_add(&h->tab[hash(s) % h->capacity], s);
-            h->size ++;
-            return 1;
-        }
+    if (h == NULL) return 0;
+
+    if(!hashset_contains(h, s)){
+	if (h->size + 1 > HASHSET_RATIO_UPPER_LIMIT * h->capacity)
+	    resize(h, h->capacity * 2);
+	list_add(&h->tab[hash(s) % h->capacity], s);
+	h->size ++;
+	return 1;
     }
+
     return 0;
 }
 
@@ -98,6 +101,8 @@ short hashset_remove(hashset_t* h, char* s){
 }
 
 void hashset_destroy(hashset_t* h){
+    if (h == 0) return;
+    
     for (int i = 0; i < h->capacity; i++)
         list_destroy(h->tab[i]);
     free(h->tab);

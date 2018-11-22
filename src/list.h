@@ -2,6 +2,9 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#ifndef H_LIST
+#define H_LIST
+
 typedef struct list_t {
     void* val;
     struct list_t* next;
@@ -39,3 +42,5 @@ int list_size(list_t*);
  * Free all memory used by the list
  */
 void list_destroy(list_t*);
+
+#endif

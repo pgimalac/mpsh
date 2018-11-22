@@ -5,6 +5,9 @@
 
 #include "list.h"
 
+#ifndef H_HASHSET
+#define H_HASHSET
+
 typedef struct hashset_t {
     int size, capacity;
     list_t** tab;
@@ -34,3 +37,5 @@ short hashset_contains(hashset_t*, char*);
  * free all memory used by the set
  */
 void hashset_destroy(hashset_t*);
+
+#endif
