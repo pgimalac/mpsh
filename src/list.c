@@ -21,18 +21,12 @@ short list_add(list_t** l, void* s){
 short list_remove(list_t** l, int i){
     if (*l == NULL || i < 0)
         return 0;
-    list_t* t = *l;
-    if (i == 0){
-        *l = (*l)->next;
-        free(t);
-    } else {
-        for (; i != 1 && t != NULL; t = t->next)
-            i--;
-        list_t* tmp = t->next;
-        if (tmp)
-            t->next = tmp->next;
-        free(tmp);
-    }
+    int k;
+    
+    for (k = 0; (*l)->next && k < i; k++)
+	l = &(*l)->next;
+
+    if (k == i) *l = (*l)->next;
     return 1;
 }
 
