@@ -27,7 +27,7 @@
 %token <var> VAR
 %token <frag> FRAG
 %left <op> BINOP
-%left <op> PIPE
+%right <op> PIPE
 %left <red> REDIR REDIR_SIMPLE
 %token SEMICOLON
 %token ERROR

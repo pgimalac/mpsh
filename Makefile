@@ -15,10 +15,9 @@ FILES_YP_FP = $(addprefix $(FOLDER_LP), $(FILES_YF))
 FILES = $(FILES_SRC_FP) $(FILES_LP_FP)
 
 LDLIBS = -lreadline
-LDLIBS_OBJ = -ll
+LDLIBS_OBJ =
 
 OBJ = $(FILES:%.c=%.o)
-TOT_C = $(words FILES)
 
 DEPNAME = $(FILES_YF_FP) $(OBJ)
 
