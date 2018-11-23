@@ -32,7 +32,7 @@ struct redir {
     redir_t type;
 };
 
-typedef enum 
+typedef enum
     {
      REDIR,
      PIPE,                     /* | */
@@ -56,14 +56,16 @@ typedef enum
     } cmd_type;
 
 typedef struct cmd {
-    union {
-	struct var_d *cmd_v;
-	struct cmd_f *cmd_f;
-	struct cmd_b *cmd_b;
-    };
+  union {
+  	struct var_d *cmd_v;
+  	struct cmd_f *cmd_f;
+  	struct cmd_b *cmd_b;
+  };
 
-    cmd_type type;
+  cmd_type type;
 } cmd_t;
+
+short simplify (char*);
 
 struct var_d *
 create_var_d (char *name, char *value);

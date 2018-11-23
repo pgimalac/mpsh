@@ -3,9 +3,10 @@ ws      [ \t]+
 special [.~_\-/$]
 alpha   [A-Za-z]
 dig     [0-9]
-string  \"((\\.)|[^\"\\])*\"
+escape  \\.
+string  (\"({escape}|[^\"\\])*\")|(\'[^\']*\')
 var_id  {alpha}({alpha}|{dig})*
-ident   ({alpha}|{dig}|{special})+
+ident   ({alpha}|{dig}|{special}|{escape})+
 
 %{
 #include <stdlib.h>
@@ -107,6 +108,8 @@ ident   ({alpha}|{dig}|{special})+
 {var_id}"="({ident}|{string}) {
     char *name = strtok(yytext, "=");
     char *value = strtok(0, "=");
+    simplify(name);
+    simplify(value);
     yylval.var = create_var_d(name, value);
     return TOK_VAR;
 }
@@ -127,6 +130,7 @@ ident   ({alpha}|{dig}|{special})+
     	    argv = realloc(argv, sizeof(char *) * size);
     	}
 
+        simplify(buf);
     	argv[argc++] = buf;
     }
 
@@ -136,6 +140,6 @@ ident   ({alpha}|{dig}|{special})+
 }
 
 . {
-    fprintf(stderr, "mpsh: unexpexted character %s\n", yytext);
+    fprintf(stderr, "mpsh: unexpected character %s\n", yytext);
     return TOK_ERROR;
 }
