@@ -1,5 +1,5 @@
 NAME = mpsh
-FILES = src/main.c
+FILES = $(wildcard src/*.c)
 LDLIBS = -lreadline
 
 OBJ = $(FILES:%.c=%.o)
