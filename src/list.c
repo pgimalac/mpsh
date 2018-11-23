@@ -22,12 +22,27 @@ short list_remove(list_t** l, int i){
     if (*l == NULL || i < 0)
         return 0;
     int k;
-    
-    for (k = 0; (*l)->next && k < i; k++)
-	l = &(*l)->next;
 
-    if (k == i) *l = (*l)->next;
+    for (k = 0; (*l)->next && k < i; k++)
+        l = &(*l)->next;
+
+    if (k == i){
+        list_t* tmp = *l;
+        *l = (*l)->next;
+        free(tmp);
+    }
     return 1;
+}
+
+void* list_pop(list_t** l){
+    void* e = NULL;
+    if (l && *l){
+        e = (*l)->val;
+        list_t* tmp = *l;
+        *l = (*l)->next;
+        free(tmp);
+    }
+    return e;
 }
 
 short list_set(list_t* l, int i, void* v){

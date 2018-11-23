@@ -43,4 +43,10 @@ int list_size(list_t*);
  */
 void list_destroy(list_t*);
 
+/**
+ * Removes the first element of the list and returns it
+ */
+void* list_pop(list_t**);
+
+
 #endif

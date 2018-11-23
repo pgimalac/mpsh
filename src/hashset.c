@@ -30,9 +30,8 @@ static unsigned int hash(char *s) {
 }
 
 static short resize(hashset_t* h, int capacity){
-    list_t** t;
-    if (!(t = malloc(sizeof(list_t) * capacity)))
-        return 0;
+    list_t** t = malloc(sizeof(list_t) * capacity);
+    if (!t) return 0;
 
     for (int i = 0; i < capacity; i++)
         t[i] = NULL;
@@ -50,7 +49,7 @@ static short resize(hashset_t* h, int capacity){
 
 short hashset_contains(hashset_t* h, char* s){
     if (h == NULL) return 0;
-    
+
     for (list_t* l = h->tab[hash(s) % h->capacity]; l != NULL; l = l->next)
 	if (strcmp(l->val, s) == 0)
 	    return 1;
@@ -102,7 +101,7 @@ short hashset_remove(hashset_t* h, char* s){
 
 void hashset_destroy(hashset_t* h){
     if (h == 0) return;
-    
+
     for (int i = 0; i < h->capacity; i++)
         list_destroy(h->tab[i]);
     free(h->tab);
