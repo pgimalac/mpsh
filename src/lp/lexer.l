@@ -15,6 +15,32 @@ ident   ({alpha}|{dig}|{special}|{escape})+
 #include "parsing.h"
 #include "parser.h"
 
+short simplify(char* position){
+    char * cursor = position;
+    for (cursor = position; *position; position ++)
+        if (*position == '\\'){
+            if (!*++position)
+                return 1;
+            *cursor++ = *position;
+        } else if (*position == '\'') {
+            for (position++; *position && *position != '\''; )
+                *cursor++ = *position++;
+            if (!*position)
+                return 2;
+        } else if (*position == '\"') {
+            for (position++; *position && *position != '\"'; ){
+                if (*position == '\\' && !*++position)
+                    return 4;
+                *cursor++ = *position++;
+            }
+            if (!*position)
+                return 3;
+        } else
+            *cursor++ = *position;
+    *cursor = '\0';
+    return 0;
+}
+
     extern void yyerror(char *s);
 %}
 

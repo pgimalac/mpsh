@@ -65,8 +65,6 @@ typedef struct cmd {
   cmd_type type;
 } cmd_t;
 
-short simplify (char*);
-
 struct var_d *
 create_var_d (char *name, char *value);
 

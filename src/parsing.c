@@ -2,36 +2,6 @@
 
 #include "parsing.h"
 
-// uncomment if not sure if position is a valid string
-short simplify(char* position){
-//    char back[strlen(s)];
-//    char *s = position, *cursor = back;
-    char * cursor = position;
-    for (cursor = position; *position; position ++)
-        if (*position == '\\'){
-            if (!*++position)
-                return 1;
-            *cursor++ = *position;
-        } else if (*position == '\'') {
-            for (position++; *position && *position != '\''; )
-                *cursor++ = *position++;
-            if (!*position)
-                return 2;
-        } else if (*position == '\"') {
-            for (position++; *position && *position != '\"'; ){
-                if (*position == '\\' && !*++position)
-                    return 4;
-                *cursor++ = *position++;
-            }
-            if (!*position)
-                return 3;
-        } else
-            *cursor++ = *position;
-    *cursor = '\0';
-//    strcpy(position, back);
-    return 0;
-}
-
 struct var_d *
 create_var_d (char *name, char *value) {
     struct var_d *v = malloc(sizeof(struct var_d));
