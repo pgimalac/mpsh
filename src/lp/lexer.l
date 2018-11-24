@@ -12,6 +12,7 @@ ident   ({alpha}|{dig}|{special}|{escape})+
 #include <stdlib.h>
 #include <string.h>
 
+#include "array.h"
 #include "parsing.h"
 #include "parser.h"
 
@@ -141,26 +142,16 @@ short simplify(char* position){
 }
 
 {ident}({ws}({ident}|{string}))*{ws} {
-    int argc, size;
+    int argc;
     char *buf;
     char **argv;
+    array_t *args = array_init();
 
-    size = 4;
-    argc = 0;
+    for (buf = strtok(yytext, " "); buf; buf = strtok(0, " "))
+        array_add(args, buf);
 
-    argv = malloc(sizeof(char *) * size);
-
-    for (buf = strtok(yytext, " "); buf; buf = strtok(0, " ")) {
-    	if (argc == size) {
-    	    size *= 2;
-    	    argv = realloc(argv, sizeof(char *) * size);
-    	}
-
-        simplify(buf);
-    	argv[argc++] = buf;
-    }
-
-    argv = realloc(argv, sizeof(char *) * argc);
+    argc = args->size;
+    argv = array_to_tab(args);
     yylval.frag = create_cmd_f(argc, argv);
     return TOK_FRAG;
 }

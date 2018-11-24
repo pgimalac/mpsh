@@ -12,6 +12,8 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 
+#include "array.h"
+#include "hashmap.h"
 #include "parsing.h"
 #include "parser.h"
 
@@ -19,14 +21,12 @@ extern int yy_scan_string(const char *);
 extern cmd_t *parse_ret;
 
 char *dupstr(char *s){
-    char *r = malloc(strlen(s)+1);
+    char *r = malloc(strlen(s) + 1);
     strcpy (r, s);
     return r;
 }
 
-#define MAX_COMPLETION 10000
-
-char *completions[MAX_COMPLETION];
+char **completions;
 int nb_completions;
 
 void init_completion () {
@@ -37,51 +37,46 @@ void init_completion () {
     char *saveptr1, *saveptr2;
     struct stat stat_buf, stat_buf2;
 
-    nb_completions = 0;
-    for (int i = 0; i < MAX_COMPLETION; i++)
-       completions[i] = 0;
+    array_t *array = array_init();
 
-    for (path = strtok_r(var_path, ":", &saveptr1);; var_path = 0,
-         path = strtok_r(0, ":", &saveptr1)) {
-        if (!path) break;
-
+    for (path = strtok_r(var_path, ":", &saveptr1); path; var_path = 0,
+             path = strtok_r(0, ":", &saveptr1)) {
         if (stat(path, &stat_buf) == 0) {
             if (S_ISDIR(stat_buf.st_mode)) {
+		if ((dir = opendir(path))) {
+		    while ((entry = readdir(dir)))
+			if (entry->d_type == DT_REG) {
+			    pathname = malloc(sizeof(char) * 512);
+			    strncpy(pathname, path, 256);
+			    strcat(pathname, "/");
+			    strncat(pathname, entry->d_name, 256);
 
-                if ((dir = opendir(path))) {
-                    while (nb_completions < MAX_COMPLETION &&
-                       (entry = readdir(dir)))
+			    if(stat(pathname, &stat_buf2) == 0 &&
+			       stat_buf2.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH)) {
 
-                        if (entry->d_type == DT_REG) { // TODO: check if exec
-                            pathname = malloc(sizeof(char) * 512);
-                            strncpy(pathname, path, 256);
-                            strcat(pathname, "/");
-                            strncat(pathname, entry->d_name, 256);
+				buf = malloc(sizeof(char) * 256);
+				strncpy(buf, entry->d_name, 255);
+				array_add(array, buf);
+			    }
 
-                            if(stat(pathname, &stat_buf2) == 0 &&
-                               stat_buf2.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH)) {
-                                buf = malloc(sizeof(char) * 256);
-                                strncpy(buf, entry->d_name, 255);
-                                completions[nb_completions++] = buf;
-                            }
+			    free(pathname);
+			}
+		} else fprintf(stderr, "Can't open %s", path);
 
-                            free(pathname);
-                        }
-                } else fprintf(stderr, "Can't open %s", path);
-
-                closedir(dir);
-            } else if (nb_completions < MAX_COMPLETION &&
-                   S_ISREG(stat_buf.st_mode) &&
-                   stat_buf.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH)) {
-                char *name, *tmp;
-                for (tmp = strtok_r(path, "/", &saveptr2); tmp; path = 0,
-                     tmp = strtok_r(0, "/", &saveptr2))
-                    name = tmp;
-
-                completions[nb_completions++] = name;
+		closedir(dir);
+            } else if (S_ISREG(stat_buf.st_mode) &&
+		       stat_buf.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH)) {
+		char *name, *tmp;
+		for (tmp = strtok_r(path, "/", &saveptr2); tmp; path = 0,
+			 tmp = strtok_r(0, "/", &saveptr2))
+		    name = tmp;
+		array_add(array, name);
             }
         } else fprintf(stderr, "Can't open %s", path);
     }
+
+    nb_completions = array->size;
+    completions = array_to_tab(array);
 }
 
 char *command_generator (const char *com, int num){
@@ -109,7 +104,7 @@ char ** fileman_completion (const char *com, int start, int end) {
     end = end;
 
     if (start == 0)
-       matches = rl_completion_matches (com, command_generator);
+        matches = rl_completion_matches (com, command_generator);
 
     return matches;
 }
@@ -177,6 +172,5 @@ int main (void) {
         add_history(s);
         free(s);
     }
-
     return 0;
 }

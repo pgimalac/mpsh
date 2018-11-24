@@ -1,10 +1,11 @@
 NAME = mpsh
-
 FOLDER_SRC = src/
 FOLDER_LP = src/lp/
 ALL_FOLDERS = $(FOLDER_SRC) $(FOLDER_LP)
 
-FILES_SRC = parsing.c main.c
+FILES_SRC = array.c list.c \
+		hashmap.c hashset.c \
+		parsing.c main.c
 FILES_LP = lexer.c parser.c
 FILES_YF = lexer.l parser.y
 
