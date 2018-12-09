@@ -43,34 +43,34 @@ void init_completion () {
              path = strtok_r(0, ":", &saveptr1)) {
         if (stat(path, &stat_buf) == 0) {
             if (S_ISDIR(stat_buf.st_mode)) {
-		if ((dir = opendir(path))) {
-		    while ((entry = readdir(dir)))
-			if (entry->d_type == DT_REG) {
-			    pathname = malloc(sizeof(char) * 512);
-			    strncpy(pathname, path, 256);
-			    strcat(pathname, "/");
-			    strncat(pathname, entry->d_name, 256);
+                if ((dir = opendir(path))) {
+                    while ((entry = readdir(dir)))
+                        if (entry->d_type == DT_REG) {
+                            pathname = malloc(sizeof(char) * 512);
+                            strncpy(pathname, path, 256);
+                            strcat(pathname, "/");
+                            strncat(pathname, entry->d_name, 256);
 
-			    if(stat(pathname, &stat_buf2) == 0 &&
-			       stat_buf2.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH)) {
+                            if(stat(pathname, &stat_buf2) == 0 &&
+                               stat_buf2.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH)) {
 
-				buf = malloc(sizeof(char) * 256);
-				strncpy(buf, entry->d_name, 255);
-				array_add(array, buf);
-			    }
+                                buf = malloc(sizeof(char) * 256);
+                                strncpy(buf, entry->d_name, 255);
+                                array_add(array, buf);
+                            }
 
-			    free(pathname);
-			}
-		} else fprintf(stderr, "Can't open %s", path);
+                            free(pathname);
+                        }
+                } else fprintf(stderr, "Can't open %s", path);
 
-		closedir(dir);
+                closedir(dir);
             } else if (S_ISREG(stat_buf.st_mode) &&
-		       stat_buf.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH)) {
-		char *name, *tmp;
-		for (tmp = strtok_r(path, "/", &saveptr2); tmp; path = 0,
-			 tmp = strtok_r(0, "/", &saveptr2))
-		    name = tmp;
-		array_add(array, name);
+                       stat_buf.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH)) {
+                char *name, *tmp;
+                for (tmp = strtok_r(path, "/", &saveptr2); tmp; path = 0,
+                         tmp = strtok_r(0, "/", &saveptr2))
+                    name = tmp;
+                array_add(array, name);
             }
         } else fprintf(stderr, "Can't open %s", path);
     }
@@ -119,31 +119,30 @@ int init_readline() {
 void print_cmd (cmd_t *cmd) {
     if (!cmd) return;
     switch (cmd->type) {
-        case FRA:
-            printf("frag: ");
-            for (int i = 0; i < cmd->cmd_f->argc; i++)
-                printf("%s ", cmd->cmd_f->argv[i]);
-            printf("\n");
-            break;
-        case BIN:
-            switch (cmd->cmd_b->type) {
-                case REDIR:
-                    printf("redir %d from %d to %d\n",
-                       cmd->cmd_b->redir->type,
-                       cmd->cmd_b->redir->fd1,
-                       cmd->cmd_b->redir->fd2);
-                break;
-                default:
-                    printf("bin %d\n", cmd->cmd_b->type);
-            }
-            print_cmd(cmd->cmd_b->left);
-            print_cmd(cmd->cmd_b->right);
-            break;
-        case VAR:
-            printf("var\n");
-            break;
-        default:
-            printf("unknow\n");
+    case SIMPLE:
+        printf("simple: ");
+        for (int i = 0; i < cmd->cmd_s->argc; i++)
+            printf("%s, ", cmd->cmd_s->argv[i]);
+        printf("\n");
+        printf("redirections: \n");
+        for (list_t *e = cmd->cmd_s->redirs; e; e = e->next) {
+            struct redir *r = e->val;
+            if (r->is_simple)
+                printf("-> %d %d %d\n", r->sredir->type, r->sredir->fd1, r->sredir->fd2);
+            else
+                printf("-> %d %d %s\n", r->fredir->type, r->fredir->fd, r->fredir->fname);
+        }
+        break;
+    case BIN:
+        printf("bin %d\n", cmd->cmd_b->type);
+        print_cmd(cmd->cmd_b->left);
+        print_cmd(cmd->cmd_b->right);
+        break;
+    case VAR:
+        printf("var\n");
+        break;
+    default:
+        printf("unknow\n");
     }
 }
 

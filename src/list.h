@@ -46,7 +46,12 @@ void list_destroy(list_t*);
 /**
  * Removes the first element of the list and returns it
  */
-void* list_pop(list_t**);
+void *list_pop(list_t**);
 
+/**
+ * Transform the linked list into an array of the given length
+ * Free all nodes from the list
+ */
+void **list_to_tab(list_t *list, int length, size_t sz);
 
 #endif

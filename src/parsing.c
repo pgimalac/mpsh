@@ -1,5 +1,6 @@
 #include <stdlib.h>
 
+#include "list.h"
 #include "parsing.h"
 
 struct var_d *
@@ -13,27 +14,62 @@ create_var_d (char *name, char *value) {
     return v;
 }
 
-struct cmd_f *
-create_cmd_f (int argc, char **argv) {
-    struct cmd_f *f = malloc(sizeof(struct cmd_f));
-    if (f) {
-        f->argc = argc;
-        f->argv = argv;
-    }
-
-    return f;
-}
-
-struct redir *
-create_redir (redir_t type, int fd1, int fd2) {
-    struct redir *red = malloc(sizeof(struct redir));
+struct simple_redir *
+create_simple_redir (redir_t type, int fd1, int fd2) {
+    struct simple_redir *red = malloc(sizeof(struct redir));
     if (red) {
         red->type = type;
-        red->fd1 = fd1;
-        red->fd2 = fd2;
+        red->fd1  = fd1;
+        red->fd2  = fd2;
     }
 
     return red;
+}
+
+struct file_redir *
+create_file_redir (redir_t type, int fd1, char *name) {
+    struct file_redir *red = malloc(sizeof(struct redir));
+    if (red) {
+        red->type  = type;
+        red->fd    = fd1;
+        red->fname = name;
+    }
+
+    return red;
+}
+
+struct redir *
+redir_from_simple (struct simple_redir *r) {
+    struct redir *red = malloc(sizeof(struct redir));
+    if (r) {
+        red->sredir  = r;
+        red->is_simple = 1;
+    }
+
+    return red;
+}
+
+struct redir *
+redir_from_file (struct file_redir *r) {
+    struct redir *red = malloc(sizeof(struct redir));
+    if (r) {
+        red->fredir  = r;
+        red->is_simple = 0;
+    }
+
+    return red;
+}
+
+struct cmd_s *
+create_cmd_s (int argc, char **argv, list_t *redirs) {
+    struct cmd_s *f = malloc(sizeof(struct cmd_s));
+    if (f) {
+        f->argc = argc;
+        f->argv = argv;
+        f->redirs = redirs;
+    }
+
+    return f;
 }
 
 struct cmd_b *
@@ -41,20 +77,6 @@ create_cmd_b (bin_op op, cmd_t *left, cmd_t *right) {
     struct cmd_b *b = malloc(sizeof(struct cmd_b));
     if (b) {
         b->type = op;
-        b->redir = 0;
-        b->left = left;
-        b->right = right;
-    }
-
-    return b;
-}
-
-struct cmd_b *
-create_cmd_redir (struct redir *red, cmd_t *left, cmd_t *right) {
-    struct cmd_b *b = malloc(sizeof(struct cmd_b));
-    if (b) {
-        b->type = REDIR;
-        b->redir = red;
         b->left = left;
         b->right = right;
     }
@@ -63,11 +85,11 @@ create_cmd_redir (struct redir *red, cmd_t *left, cmd_t *right) {
 }
 
 cmd_t *
-create_cmd_with_frag (struct cmd_f *f) {
+create_cmd_with_simple (struct cmd_s *s) {
     cmd_t *cmd = malloc(sizeof(cmd_t));
     if (cmd) {
-        cmd->type = FRA;
-        cmd->cmd_f = f;
+        cmd->type = SIMPLE;
+        cmd->cmd_s = s;
     }
 
     return cmd;
@@ -94,4 +116,3 @@ create_cmd_with_var_def (struct var_d *v) {
 
     return cmd;
 }
-

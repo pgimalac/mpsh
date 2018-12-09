@@ -2,9 +2,9 @@
 
 #define ARRAY_INITIAL_CAPACITY 16
 
-array_t* array_init(){
-    array_t* a;
-    if ((a = malloc(sizeof(array_t)))){
+array_t *array_init(){
+    array_t* a = malloc(sizeof(array_t));
+    if (a) {
         a->size = 0;
         a->capacity = ARRAY_INITIAL_CAPACITY;
 

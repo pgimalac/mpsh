@@ -23,9 +23,9 @@ OBJ = $(FILES:%.c=%.o)
 DEPNAME = $(FILES_YF_FP) $(OBJ)
 
 CC = gcc
-LEX = lex
-YACC = yacc
-FLAGS = -Wall -Wextra -g $(foreach d, $(ALL_FOLDERS), -I $(d))
+LEX = flex
+YACC = bison
+FLAGS = -Wall -Wno-unused-function -Werror -Wextra -g $(foreach d, $(ALL_FOLDERS), -I $(d))
 
 all: $(NAME)
 
@@ -42,7 +42,7 @@ $(NAME): $(DEPNAME)
 	$(CC) $(FLAGS) $(OBJ) -o $(NAME) $(LDLIBS)
 
 clean:
-	rm -rf $(OBJ)
+	rm -rf $(OBJ) $(FILES_LP_FP)
 
 fclean: clean
 	rm -rf $(NAME)

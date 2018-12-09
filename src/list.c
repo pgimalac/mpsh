@@ -69,3 +69,17 @@ void list_destroy(list_t* l){
         free(l);
     }
 }
+
+void **list_to_tab(list_t *list, int length, size_t sz) {
+    void **tab = malloc(sz * length);
+    int i = 0;
+
+    while (list) {
+        list_t *tmp = list;
+        tab[i++] = list->val;
+        list = list->next;
+        free(tmp);
+    }
+
+    return tab;
+}

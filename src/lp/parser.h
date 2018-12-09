@@ -49,39 +49,37 @@ extern int yydebug;
   enum yytokentype
   {
     TOK_VAR = 258,
-    TOK_FRAG = 259,
+    TOK_IDENT = 259,
     TOK_BINOP = 260,
     TOK_PIPE = 261,
     TOK_REDIR = 262,
-    TOK_REDIR_SIMPLE = 263,
+    TOK_SIMPLE_REDIR = 263,
     TOK_SEMICOLON = 264,
     TOK_ERROR = 265
   };
 #endif
-/* Tokens.  */
-#define TOK_VAR 258
-#define TOK_FRAG 259
-#define TOK_BINOP 260
-#define TOK_PIPE 261
-#define TOK_REDIR 262
-#define TOK_REDIR_SIMPLE 263
-#define TOK_SEMICOLON 264
-#define TOK_ERROR 265
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 
 union YYSTYPE
 {
-#line 19 "src/lp/parser.y" /* yacc.c:1906  */
+#line 20 "src/lp/parser.y" /* yacc.c:1906  */
 
     cmd_t *cmd;
+    char *value;
+
+    list_t *arg_list;
+    list_t *redir_list;
+
+    struct simple_redir *simple;
+    struct file_redir *file;
     struct cmd_f *frag;
     struct var_d *var;
     struct redir *red;
     bin_op op;
 
-#line 85 "src/lp/parser.h" /* yacc.c:1906  */
+#line 83 "src/lp/parser.h" /* yacc.c:1906  */
 };
 
 typedef union YYSTYPE YYSTYPE;
