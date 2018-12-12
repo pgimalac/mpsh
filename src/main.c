@@ -167,8 +167,7 @@ int main (void) {
     hashmap_add(vars, "v1", "coucou");
     // TODO: add env variables
 
-    while(1) {
-        s = readline ("mpsh> ");
+    while((s = readline ("mpsh> "))) {
         command_line_handler(s);
         add_history(s);
         free(s);
