@@ -76,11 +76,10 @@ hashmap_t *hashmap_init() {
 static map_elem *get (hashmap_t *map, char *key) {
     if (map == 0) return 0;
 
-    printf("%d %s\n", hash(key) % map->capacity, key);
     map_elem *e;
     for (list_t *l = map->tab[hash(key) % map->capacity]; l; l = l->next) {
         e = (map_elem*)l->val;
-        if (strcmp(e->key, key)) return e;
+        if (strcmp(e->key, key) == 0) return e;
     }
 
     return 0;
@@ -101,6 +100,11 @@ short hashmap_add(hashmap_t *map, char *key, char *value) {
     e->value = value;
 
     return 1;
+}
+
+char *hashmap_get(hashmap_t *map, char *key) {
+    struct map_elem *e = get(map, key);
+    return e ? e->value : 0;
 }
 
 static short map_list_remove (list_t **lst, char *key) {

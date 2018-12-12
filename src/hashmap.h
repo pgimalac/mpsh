@@ -17,6 +17,12 @@ hashmap_t* hashmap_init();
 short hashmap_add(hashmap_t*, char* key, char* value);
 
 /**
+ * Return the value for a given key
+ * return NULL if the key does not exists
+ */
+char *hashmap_get(hashmap_t*, char* key);
+
+/**
  * Remove the given element of the set
  */
 short hashmap_remove(hashmap_t*, char* key);

@@ -20,6 +20,8 @@
 extern int yy_scan_string(const char *);
 extern cmd_t *parse_ret;
 
+hashmap_t *vars;
+
 char *dupstr(char *s){
     char *r = malloc(strlen(s) + 1);
     strcpy (r, s);
@@ -140,6 +142,7 @@ void print_cmd (cmd_t *cmd) {
         break;
     case VAR:
         printf("var\n");
+        printf("%s '%s'\n", cmd->cmd_v->name, cmd->cmd_v->value);
         break;
     default:
         printf("unknow\n");
@@ -149,11 +152,7 @@ void print_cmd (cmd_t *cmd) {
 void command_line_handler (char* input) {
     if (!input) return;
 
-    char *dest = malloc(strlen(input) + 2);
-    strcpy(dest, input);
-    strcat(dest, " ");
-
-    yy_scan_string(dest);
+    yy_scan_string(input);
     if (yyparse() != 0) return;
 
     print_cmd(parse_ret);
@@ -164,6 +163,9 @@ int main (void) {
 
     init_completion();
     init_readline();
+    vars = hashmap_init();
+    hashmap_add(vars, "v1", "coucou");
+    // TODO: add env variables
 
     while(1) {
         s = readline ("mpsh> ");

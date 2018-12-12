@@ -2,36 +2,62 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "array.h"
+#include "hashmap.h"
 #include "parsing.h"
 #include "parser.h"
 
+    static char *cat(char *str1, char *str2) {
+        char *buf = malloc(strlen(str1) + strlen(str2) + 1);
+        if (buf) {
+            strcpy(buf, str1);
+            strcat(buf, str2);
+        }
+
+        return buf;
+    }
+
+    extern hashmap_t *vars;
     extern void yyerror(char *s);
+
+    static char *var_name_buf;
 %}
 
 ws      [ \t]+
-
-special [.~_\-/$]
+special [.~_\-/]
 alpha   [A-Za-z]
 dig     [0-9]
 escape  \\.
 var_id  {alpha}({alpha}|{dig})*
 ident   ({alpha}|{dig}|{special})+
 
+%x VAR
+%x IDENT
 %x STRING
 %%
 
-<INITIAL>\" { BEGIN(STRING); }
+<*>"$"{var_id} {
+    char *value = hashmap_get(vars, yytext + 1);
+    value = value ? value : yytext;
+    if (YY_START == INITIAL) {
+        yylval.value = value;
+        BEGIN IDENT;
+    } else {
+        yylval.value = cat(yylval.value, value);
+    }
+}
+
+<INITIAL>\" { yylval.value = "";BEGIN(STRING); }
 <STRING>\" {
-    yylval.value = strndup(yytext, strlen(yytext) - 1);
     BEGIN(INITIAL);
     return TOK_IDENT;
- }
-<STRING>[^\"] { yymore(); }
+}
+<STRING>[^\"] {
+    yylval.value = cat(yylval.value, yytext);
+}
 <STRING><<EOF>> {
-    yyerror("expected \" before EOF");
+    yyerror("unclosed string");
     return 1;
- }
+}
 
 {ws} // skip
 
@@ -119,10 +145,45 @@ ident   ({alpha}|{dig}|{special})+
     return TOK_SEMICOLON;
 }
 
-{ident} {
+<INITIAL>{ident} {
     yylval.value = strdup(yytext);
+    BEGIN IDENT;
+}
+
+<IDENT>{ident} {
+    yylval.value = cat(yylval.value, yytext);
+}
+
+<IDENT>\\. {
+    yylval.value = cat(yylval.value, yytext + 1);
+ }
+
+<IDENT>. {
+    yyless(0);
+    BEGIN INITIAL;
     return TOK_IDENT;
 }
+
+<IDENT><<EOF>> {
+    BEGIN INITIAL;
+    return TOK_IDENT;
+ }
+
+{var_id}"=" {
+    yylval.value = "";
+    var_name_buf = strndup(yytext, strlen(yytext) - 1);
+    BEGIN VAR;
+}
+
+<VAR>[^"\n"$]+ {
+    yylval.value = cat(yylval.value, yytext);
+}
+
+<VAR><<EOF>> {
+    yylval.var = create_var_d(var_name_buf, yylval.value);
+    BEGIN INITIAL;
+    return TOK_VAR;
+ }
 
 . {
     fprintf(stderr, "mpsh: unexpected character %s\n", yytext);

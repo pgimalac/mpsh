@@ -103,7 +103,7 @@ struct file_redir *
 create_file_redir (redir_t type, int fd1, char *name);
 
 struct redir *
-redir_from_simple(struct simple_redir *r);
+redir_from_simple (struct simple_redir *r);
 
 struct redir *
 redir_from_file (struct file_redir *r);
