@@ -61,10 +61,9 @@ redir_from_file (struct file_redir *r) {
 }
 
 struct cmd_s *
-create_cmd_s (int argc, char **argv, list_t *redirs) {
+create_cmd_s (char **argv, list_t *redirs) {
     struct cmd_s *f = malloc(sizeof(struct cmd_s));
     if (f) {
-        f->argc = argc;
         f->argv = argv;
         f->redirs = redirs;
     }
@@ -89,7 +88,7 @@ create_cmd_with_simple (struct cmd_s *s) {
     cmd_t *cmd = malloc(sizeof(cmd_t));
     if (cmd) {
         cmd->type = SIMPLE;
-        cmd->cmd_s = s;
+        cmd->cmd_sim = s;
     }
 
     return cmd;
@@ -100,7 +99,7 @@ create_cmd_with_bin_op (struct cmd_b *b) {
     cmd_t *cmd = malloc(sizeof(cmd_t));
     if (cmd) {
         cmd->type = BIN;
-        cmd->cmd_b = b;
+        cmd->cmd_bin = b;
     }
 
     return cmd;
@@ -111,7 +110,7 @@ create_cmd_with_var_def (struct var_d *v) {
     cmd_t *cmd = malloc(sizeof(cmd_t));
     if (cmd) {
         cmd->type = VAR;
-        cmd->cmd_v = v;
+        cmd->cmd_var = v;
     }
 
     return cmd;

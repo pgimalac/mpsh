@@ -1,12 +1,13 @@
+#ifndef H_HASHSET
+#define H_HASHSET
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
 
 #include "list.h"
-
-#ifndef H_HASHSET
-#define H_HASHSET
 
 typedef struct hashset_t {
     int size, capacity;

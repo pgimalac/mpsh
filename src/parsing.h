@@ -7,10 +7,10 @@
 
 #include "list.h"
 
-struct var_d {
+typedef struct var_d {
     char *name;
     char *value;
-};
+} var_d;
 
 typedef enum {
       REDIR_WRITE,          /* > */
@@ -27,39 +27,38 @@ typedef enum {
 /**
  * Redirections between file descriptors
  */
-struct simple_redir {
+typedef struct simple_redir {
     int fd1, fd2;
     redir_t type;
-};
+} simple_redir;
 
 /**
  * Redirection with a file
  */
-struct file_redir {
+typedef struct file_redir {
     int fd;
     char *fname;
     redir_t type;
-};
+} file_redir;
 
-struct redir {
+typedef struct redir {
     union {
-        struct file_redir *fredir;
-        struct simple_redir *sredir;
+        file_redir *fredir;
+        simple_redir *sredir;
     };
 
     short is_simple;
-};
+} redir;
 
 /**
  * Any basic command is a vector of arguments
  * and a list of redirections to apply on the new process
  */
-struct cmd_s {
-    int argc;
+typedef struct cmd_s {
     char **argv;
 
     list_t *redirs;
-};
+} cmd_s;
 
 typedef enum
     {
@@ -69,11 +68,13 @@ typedef enum
      SEMI                      /* ; or \n */
     } bin_op;
 
-struct cmd_b {
-    struct cmd *left, *right;
+typedef struct cmd_t cmd_t;
+
+typedef struct cmd_b {
+    cmd_t *left, *right;
 
     bin_op type;
-};
+} cmd_b;
 
 typedef enum
     {
@@ -82,15 +83,15 @@ typedef enum
      VAR
     } cmd_type;
 
-typedef struct cmd {
+struct cmd_t {
   union {
-    struct var_d *cmd_v;
-    struct cmd_s *cmd_s;
-    struct cmd_b *cmd_b;
+    cmd_b *cmd_bin;
+    cmd_s *cmd_sim;
+    var_d *cmd_var;
   };
 
   cmd_type type;
-} cmd_t;
+};
 
 /**
  * Constructors
@@ -112,7 +113,7 @@ struct var_d *
 create_var_d (char *name, char *value);
 
 struct cmd_s *
-create_cmd_s (int argc, char **argv, list_t *redirs);
+create_cmd_s (char **argv, list_t *redirs);
 
 struct cmd_b *
 create_cmd_b (bin_op op, cmd_t *left, cmd_t *right);

@@ -1,3 +1,6 @@
+#ifndef HASHMAP
+#define HASHMAP
+
 #include "list.h"
 
 typedef struct hashmap {
@@ -41,3 +44,5 @@ void hashmap_destroy(hashmap_t*);
  * print all key value couple store in the map
  */
 void hashmap_print(hashmap_t *);
+
+#endif
