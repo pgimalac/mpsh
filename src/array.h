@@ -1,3 +1,6 @@
+#ifndef ARRAY
+#define ARRAY
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -51,7 +54,9 @@ void array_destroy(array_t*);
 
 /**
  * Return the array and reallocate to have the exact size
- * Free the given array_t (if the realloc succeded) because 
+ * Free the given array_t (if the realloc succeded) because
  * assumed useless after conversion
  */
 char** array_to_tab (array_t*);
+
+#endif

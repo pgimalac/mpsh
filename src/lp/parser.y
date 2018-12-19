@@ -65,9 +65,8 @@ cmd:
 cmd_simple:
 %empty              { $$ = 0; }
 | args redir {
-    int argc = list_size($1);
-    char **argv = (char**)list_to_tab($1, argc, sizeof(char *));
-    $$ = create_cmd_with_simple(create_cmd_s(argc, argv, $2));
+    char **argv = (char**)list_to_tab($1, sizeof(char *));
+    $$ = create_cmd_with_simple(create_cmd_s(argv, $2));
   }
 ;
 

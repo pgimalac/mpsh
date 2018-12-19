@@ -3,7 +3,9 @@ FOLDER_SRC = src/
 FOLDER_LP = src/lp/
 ALL_FOLDERS = $(FOLDER_SRC) $(FOLDER_LP)
 
-FILES_SRC = array.c list.c \
+FILES_SRC = builtin.c \
+		command.c completion.c \
+		array.c list.c \
 		hashmap.c hashset.c \
 		parsing.c main.c
 FILES_LP = lexer.c parser.c
@@ -25,7 +27,7 @@ DEPNAME = $(FILES_YF_FP) $(OBJ)
 CC = gcc
 LEX = flex
 YACC = bison
-FLAGS = -Wall -Wno-unused-function -Werror -Wextra -g $(foreach d, $(ALL_FOLDERS), -I $(d))
+FLAGS = -Wall -Wno-unused-function -Wextra -g $(foreach d, $(ALL_FOLDERS), -I $(d))
 
 all: $(NAME)
 
