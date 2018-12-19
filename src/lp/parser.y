@@ -40,6 +40,7 @@
 %left <simple> SIMPLE_REDIR
 %token SEMICOLON
 %token ERROR
+%token EOF
 
 %type <cmd> input
 %type <cmd> cmd cmd_simple
@@ -51,7 +52,7 @@
 %%
 
 input:
-cmd			{ parse_ret = $1; }
+cmd                 { parse_ret = $1; }
 ;
 
 cmd:

@@ -55,6 +55,7 @@ ident   ({alpha}|{dig}|{special})+
     yylval.value = cat(yylval.value, yytext);
 }
 <STRING><<EOF>> {
+    BEGIN INITIAL;
     yyerror("unclosed string");
     return 1;
 }
@@ -175,9 +176,15 @@ ident   ({alpha}|{dig}|{special})+
     BEGIN VAR;
 }
 
-<VAR>[^"\n"$]+ {
+<VAR>[^"\n"$;{special}&" "]+ {
     yylval.value = cat(yylval.value, yytext);
 }
+
+<VAR>. {
+    yylval.var = create_var_d(var_name_buf, yylval.value);
+    BEGIN INITIAL;
+    return TOK_VAR;
+ }
 
 <VAR><<EOF>> {
     yylval.var = create_var_d(var_name_buf, yylval.value);

@@ -5,7 +5,8 @@ ALL_FOLDERS = $(FOLDER_SRC) $(FOLDER_LP)
 
 FILES_SRC = array.c list.c \
 		hashmap.c hashset.c \
-		parsing.c main.c
+		path.c parsing.c \
+		cmd.c main.c
 FILES_LP = lexer.c parser.c
 FILES_YF = lexer.l parser.y
 

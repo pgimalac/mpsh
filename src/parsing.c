@@ -16,7 +16,7 @@ create_var_d (char *name, char *value) {
 
 struct simple_redir *
 create_simple_redir (redir_t type, int fd1, int fd2) {
-    struct simple_redir *red = malloc(sizeof(struct redir));
+    struct simple_redir *red = malloc(sizeof(struct simple_redir));
     if (red) {
         red->type = type;
         red->fd1  = fd1;
@@ -28,7 +28,7 @@ create_simple_redir (redir_t type, int fd1, int fd2) {
 
 struct file_redir *
 create_file_redir (redir_t type, int fd1, char *name) {
-    struct file_redir *red = malloc(sizeof(struct redir));
+    struct file_redir *red = malloc(sizeof(struct file_redir));
     if (red) {
         red->type  = type;
         red->fd    = fd1;
