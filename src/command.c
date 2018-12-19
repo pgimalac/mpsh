@@ -113,7 +113,6 @@ exec_pipe (cmd_t *left, cmd_t *right) {
         perror("mpsh:");
         return 1;
     }
-
     if ((pid = fork()) == -1) {
         perror("mpsh:");
         return 1;

@@ -1,13 +1,14 @@
 #include <stddef.h>
 #include <string.h>
-#include "parsing.h"
+#include <unistd.h>
 
+#include "parsing.h"
 #include "builtin.h"
 
 unsigned char
 builtin_echo (cmd_s* cmd){
     for (int i = 1; cmd->argv[i]; i++)
-        printf("%s\n", cmd->argv[i]);
+        printf(cmd->argv[i + 1] ? "%s " : "%s\n", cmd->argv[i]);
 
     return 0;
 }
@@ -35,7 +36,9 @@ builtin_exit (cmd_s* cmd){
 
 unsigned char
 builtin_cd (cmd_s* cmd){
-    return 0;
+    if (cmd->argv[1] == 0) return 1;
+    if (chdir(cmd->argv[1]) == 0) return 0;
+    return 1;
 }
 
 unsigned char
