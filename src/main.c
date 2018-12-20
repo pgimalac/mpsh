@@ -35,9 +35,12 @@ main (void) {
     init_env_variables(vars);
     // hashmap_print (vars);
 
+    read_history(0);
+
     while((s = readline ("mpsh> "))) {
         command_line_handler(s);
         add_history(s);
+        write_history(0);
         free(s);
     }
     return 0;
