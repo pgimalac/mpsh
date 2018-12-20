@@ -3,7 +3,7 @@ FOLDER_SRC = src/
 FOLDER_LP = src/lp/
 ALL_FOLDERS = $(FOLDER_SRC) $(FOLDER_LP)
 
-FILES_SRC = builtin.c \
+FILES_SRC = env.c builtin.c \
 		command.c completion.c \
 		array.c list.c \
 		hashmap.c hashset.c \
