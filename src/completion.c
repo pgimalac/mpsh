@@ -8,6 +8,9 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 
+#include "array.h"
+#include "builtin.h"
+#include "array.h"
 #include "completion.h"
 
 static char **completions;
@@ -68,6 +71,10 @@ array_t* get_all_files (char *var_path) {
 void init_completion () {
     char *path = strdup(getenv("PATH"));
     array_t *completions_array = get_all_files(path);
+
+    for (char **c = builtin_names; *c; c++)
+        array_add(completions_array, *c);
+
     nb_completions = completions_array->size;
     completions = array_to_tab(completions_array);
 }

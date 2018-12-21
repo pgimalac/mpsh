@@ -1,10 +1,12 @@
-#include "builtin.h"
-
 #include <stddef.h>
 #include <string.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <ctype.h>
+#include <readline/history.h>
+
+#include "builtin.h"
 
 unsigned char builtin_echo (cmd_s* cmd){
     for (int i = 1; cmd->argv[i]; i++)
@@ -69,7 +71,41 @@ unsigned char builtin_umask (cmd_s* cmd){
     return 0;
 }
 
+static int log_10 (int n) {
+    int l = 0;
+    while (n > 0) {
+        n /= 10;
+        l++;
+    }
+
+    return l;
+}
+
+static short is_number (char *c) {
+    while (isdigit(*c)) c++;
+    return *c == 0;
+}
+
 unsigned char builtin_history (cmd_s* cmd){
+    int len = where_history();
+    if (cmd->argv[1] != 0) {
+        if (!is_number(cmd->argv[1])) {
+            fprintf (stderr, "not a number\n");
+            return 1;
+        }
+        int n = atoi(cmd->argv[1]);
+        if (n > len) {
+            fprintf(stderr, "too large number\n");
+            return 1;
+        }
+
+        printf("%s\n", history_get(n)->line);
+        return 0;
+    }
+
+    int margin = log_10(len);
+    for (int i = 1; i <= len; i++)
+        printf("%*d %s\n", margin, i, history_get(i)->line);
     return 0;
 }
 

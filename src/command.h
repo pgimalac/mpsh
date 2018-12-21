@@ -2,7 +2,7 @@
 #define COMMAND
 
 #include "hashmap.h"
-#include "builtin.h"
+#include "parsing.h"
 
 extern int yy_scan_string(const char *);
 extern cmd_t *parse_ret;

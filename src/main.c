@@ -13,6 +13,7 @@
 #include "parsing.h"
 #include "parser.h"
 #include "command.h"
+#include "env.h"
 
 hashmap_t *vars;
 
@@ -29,12 +30,15 @@ int main (void) {
     init_completion();
     init_readline();
     vars = hashmap_init();
-    hashmap_add(vars, "v1", "coucou");
-    // TODO: add env variables
+    init_env_variables(vars);
+    // hashmap_print (vars);
+
+    read_history(0);
 
     while((s = readline ("mpsh> "))) {
         command_line_handler(s);
         add_history(s);
+        write_history(0);
         free(s);
     }
     return 0;
