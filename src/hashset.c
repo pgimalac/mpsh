@@ -1,5 +1,10 @@
 #include "hashset.h"
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
+
 #define HASHSET_INITIAL_CAPACITY 128
 #define HASHSET_RATIO_UPPER_LIMIT 0.8
 #define HASHSET_RATIO_LOWER_LIMIT 0.1

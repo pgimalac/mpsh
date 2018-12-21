@@ -4,17 +4,16 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <readline/readline.h>
 #include <readline/history.h>
 
-#include "array.h"
 #include "completion.h"
 
 static char **completions;
 static int nb_completions;
 
-int
-fill_with_dir (char *path, array_t *array) {
+int fill_with_dir (char *path, array_t *array) {
     DIR *dir;
     char *buf;
     struct dirent *entry;
@@ -40,8 +39,7 @@ fill_with_dir (char *path, array_t *array) {
     return 0;
 }
 
-array_t *
-get_all_files (char *var_path) {
+array_t* get_all_files (char *var_path) {
     char *path, *name, *tmp;
     char *saveptr1, *saveptr2;
     struct stat stat_buf;
@@ -67,8 +65,7 @@ get_all_files (char *var_path) {
     return array;
 }
 
-void
-init_completion () {
+void init_completion () {
     char *path = strdup(getenv("PATH"));
     array_t *completions_array = get_all_files(path);
     nb_completions = completions_array->size;

@@ -1,3 +1,6 @@
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "list.h"
 
 list_t* list_init(void *v, list_t* n){

@@ -4,16 +4,11 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <stdio.h>
 
-#include "hashmap.h"
-#include "parsing.h"
-#include "parser.h"
-#include "builtin.h"
 #include "command.h"
-
-extern int yy_scan_string(const char *);
-extern cmd_t *parse_ret;
-extern hashmap_t *vars;
+#include "parsing.h"
+#include "lp/parser.h"
 
 void
 exec_simple_redir (struct simple_redir *red) {

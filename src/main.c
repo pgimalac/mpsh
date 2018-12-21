@@ -5,6 +5,7 @@
 #include <errno.h>
 
 #include <readline/readline.h>
+#include <readline/history.h>
 
 #include "completion.h"
 #include "array.h"
@@ -15,16 +16,14 @@
 
 hashmap_t *vars;
 
-int
-init_readline() {
+int init_readline() {
     rl_readline_name = "mpsh";
 
     rl_attempted_completion_function = fileman_completion;
     return 0;
 }
 
-int
-main (void) {
+int main (void) {
     char *s;
 
     init_completion();

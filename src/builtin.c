@@ -1,22 +1,26 @@
+#include "builtin.h"
+
 #include <stddef.h>
 #include <string.h>
 #include <unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
 
-#include "parsing.h"
-#include "builtin.h"
-
-unsigned char
-builtin_echo (cmd_s* cmd){
+unsigned char builtin_echo (cmd_s* cmd){
     for (int i = 1; cmd->argv[i]; i++)
         printf(cmd->argv[i + 1] ? "%s " : "%s\n", cmd->argv[i]);
 
     return 0;
 }
 
-unsigned char
-builtin_exit (cmd_s* cmd){
+unsigned char builtin_exit (cmd_s* cmd){
     int n = 0;
     if (cmd->argv[1]){
+        if (cmd->argv[2]){
+            fprintf(stderr, "%s\n", "Too many arguments.");
+            return 1;
+        }
+
         for (int i = 0; cmd->argv[1][i]; i++)
             if (cmd->argv[1][i] >= '0' && cmd->argv[1][i] <= '9'){
                 n *= 10;
@@ -34,40 +38,38 @@ builtin_exit (cmd_s* cmd){
     return 1;
 }
 
-unsigned char
-builtin_cd (cmd_s* cmd){
-    if (cmd->argv[1] == 0) return 1;
-    if (chdir(cmd->argv[1]) == 0) return 0;
-    return 1;
-}
+unsigned char builtin_cd (cmd_s* cmd){
+    if (!cmd->argv[1]) return 0;
 
-unsigned char
-builtin_alias (cmd_s* cmd){
+    if (chdir(cmd->argv[1])){
+        perror("cd");
+        return 1;
+    }
+
     return 0;
 }
 
-unsigned char
-builtin_export (cmd_s* cmd){
+unsigned char builtin_alias (cmd_s* cmd){
     return 0;
 }
 
-unsigned char
-builtin_unalias (cmd_s* cmd){
+unsigned char builtin_export (cmd_s* cmd){
     return 0;
 }
 
-unsigned char
-builtin_type (cmd_s* cmd){
+unsigned char builtin_unalias (cmd_s* cmd){
     return 0;
 }
 
-unsigned char
-builtin_umask (cmd_s* cmd){
+unsigned char builtin_type (cmd_s* cmd){
     return 0;
 }
 
-unsigned char
-builtin_history (cmd_s* cmd){
+unsigned char builtin_umask (cmd_s* cmd){
+    return 0;
+}
+
+unsigned char builtin_history (cmd_s* cmd){
     return 0;
 }
 
@@ -91,11 +93,10 @@ short is_builtin (char* s){
     return 0;
 }
 
-unsigned char
-exec_builtin(cmd_s* cmd){
+unsigned char exec_builtin(cmd_s* cmd){
     for (int i = 0; builtin_names[i]; i++)
         if (strcmp(cmd->argv[0], builtin_names[i]) == 0)
             return (*(builtin_functions[i]))(cmd);
 
-    return 2;
+    return 1;
 }

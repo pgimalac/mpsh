@@ -2,6 +2,11 @@
 
 #define ARRAY_INITIAL_CAPACITY 16
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
+
 array_t *array_init(){
     array_t* a = malloc(sizeof(array_t));
     if (a) {

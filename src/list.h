@@ -1,8 +1,6 @@
 #ifndef H_LIST
 #define H_LIST
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <unistd.h>
 
 typedef struct list_t {
