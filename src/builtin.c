@@ -8,6 +8,7 @@
 
 #include "builtin.h"
 
+// echo $var : affiche la valeur de la variable var
 unsigned char builtin_echo (cmd_s* cmd){
     for (int i = 1; cmd->argv[i]; i++)
         printf(cmd->argv[i + 1] ? "%s " : "%s\n", cmd->argv[i]);
@@ -15,6 +16,7 @@ unsigned char builtin_echo (cmd_s* cmd){
     return 0;
 }
 
+// exit [n] : permet de sortir du shell avec la valeur de retour n si n est spécifié, la valeur de retour de la dernière commande lancée sinon
 unsigned char builtin_exit (cmd_s* cmd){
     int n = 0;
     if (cmd->argv[1]){
@@ -40,6 +42,7 @@ unsigned char builtin_exit (cmd_s* cmd){
     return 1;
 }
 
+// cd [dir] : change le répertoire courant
 unsigned char builtin_cd (cmd_s* cmd){
     if (!cmd->argv[1]) return 0;
 
@@ -51,22 +54,27 @@ unsigned char builtin_cd (cmd_s* cmd){
     return 0;
 }
 
+// alias [name=value] : affiche les alias ou met en place un alias
 unsigned char builtin_alias (cmd_s* cmd){
     return 0;
 }
 
+// export var[=word] : exporte une variable ( i.e. la transforme en variable d'environnement)
 unsigned char builtin_export (cmd_s* cmd){
     return 0;
 }
 
+// unalias name : supprime un alias
 unsigned char builtin_unalias (cmd_s* cmd){
     return 0;
 }
 
+// type name [name ...] : indique comment chaque nom est interprété (comme alias, commande interne ou commande externe) s'il est utilisé pour lancer une commande
 unsigned char builtin_type (cmd_s* cmd){
     return 0;
 }
 
+// umask mode : met en place un masque pour les droits
 unsigned char builtin_umask (cmd_s* cmd){
     return 0;
 }
@@ -86,6 +94,10 @@ static short is_number (char *c) {
     return *c == 0;
 }
 
+// history [n] :
+// sans argument, affiche la liste numérotée de l'historique des commandes,
+// avec un argument n entier positif, relance la commande dont le numéro dans la liste est n,
+// avec un argument -n entier négatif, fixe à n le nombre de commandes enregistrées dans l'historique.
 unsigned char builtin_history (cmd_s* cmd){
     int len = where_history();
     if (cmd->argv[1] != 0) {
