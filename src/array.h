@@ -1,11 +1,6 @@
 #ifndef ARRAY
 #define ARRAY
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-
 typedef struct array_t {
     int size, capacity;
     char** tab;

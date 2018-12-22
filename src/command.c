@@ -4,24 +4,17 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <stdio.h>
 
-#include "hashmap.h"
-#include "parsing.h"
-#include "parser.h"
-#include "builtin.h"
 #include "command.h"
+#include "lp/parser.h"
+#include "builtin.h"
 
-extern int yy_scan_string(const char *);
-extern cmd_t *parse_ret;
-extern hashmap_t *vars;
-
-void
-exec_simple_redir (struct simple_redir *red) {
+void exec_simple_redir (struct simple_redir *red) {
     red++;
 }
 
-void
-exec_file_redir (struct file_redir *red) {
+void exec_file_redir (struct file_redir *red) {
     // TODO: change open permissions
     int fd = open(red->fname, O_RDWR|O_TRUNC|O_CREAT, 0644);
     if (fd == -1) {
@@ -60,8 +53,7 @@ exec_file_redir (struct file_redir *red) {
     }
 }
 
-void
-exec_redirections (struct cmd_s *cmd) {
+void exec_redirections (struct cmd_s *cmd) {
     for (list_t *r = cmd->redirs; r; r = r->next) {
         struct redir *red = (struct redir*)r->val;
         if (red->is_simple) exec_simple_redir (red->sredir);
@@ -69,8 +61,7 @@ exec_redirections (struct cmd_s *cmd) {
     }
 }
 
-unsigned char
-exec_simple (struct cmd_s *cmd) {
+unsigned char exec_simple (struct cmd_s *cmd) {
     if (is_builtin(cmd->argv[0]))
         return exec_builtin(cmd);
     int pid, status;
@@ -94,8 +85,7 @@ exec_simple (struct cmd_s *cmd) {
     return status;
 }
 
-unsigned char
-add_variable (struct var_d *var) {
+unsigned char add_variable (struct var_d *var) {
     if (hashmap_add(vars, var->name, var->value) == -1) {
         fprintf(stderr, "an error occured while assigniating variable %s\n", var->name);
         return 1;
@@ -105,8 +95,7 @@ add_variable (struct var_d *var) {
 }
 
 // TODO: dont work
-unsigned char
-exec_pipe (cmd_t *left, cmd_t *right) {
+unsigned char exec_pipe (cmd_t *left, cmd_t *right) {
     int fds[2], pid;
 
     if (pipe(fds) != 0) {
@@ -129,8 +118,7 @@ exec_pipe (cmd_t *left, cmd_t *right) {
     return exec_cmd(right);
 }
 
-unsigned char
-exec_bin (struct cmd_b *cmd) {
+unsigned char exec_bin (struct cmd_b *cmd) {
     int left_status;
 
     switch (cmd->type) {
@@ -152,8 +140,7 @@ exec_bin (struct cmd_b *cmd) {
     }
 }
 
-unsigned char
-exec_cmd (cmd_t *cmd) {
+unsigned char exec_cmd (cmd_t *cmd) {
     if (!cmd) return 0;
     switch (cmd->type) {
     case SIMPLE:
@@ -168,8 +155,7 @@ exec_cmd (cmd_t *cmd) {
     }
 }
 
-void
-print_cmd (cmd_t *cmd) {
+void print_cmd (cmd_t *cmd) {
     if (!cmd) return;
     switch (cmd->type) {
     case SIMPLE:
@@ -200,8 +186,7 @@ print_cmd (cmd_t *cmd) {
     }
 }
 
-void
-command_line_handler (char* input) {
+void command_line_handler (char* input) {
     if (!input) return;
 
     yy_scan_string(input);

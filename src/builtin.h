@@ -3,10 +3,9 @@
 
 #include "parsing.h"
 
-char* builtin_names[];
+extern char* builtin_names[];
 
 short is_builtin (char*);
-
 unsigned char exec_builtin (cmd_s*);
 
 #endif

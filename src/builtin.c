@@ -2,25 +2,34 @@
 #include <string.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <ctype.h>
 #include <readline/history.h>
 
+<<<<<<< HEAD
 #include "parsing.h"
 #include "command.h"
+=======
+>>>>>>> 5c4f8c56d5378d66c2dfacc25df02203e762049e
 #include "builtin.h"
 
-unsigned char
-builtin_echo (cmd_s* cmd){
+// echo $var : affiche la valeur de la variable var
+unsigned char builtin_echo (cmd_s* cmd){
     for (int i = 1; cmd->argv[i]; i++)
         printf(cmd->argv[i + 1] ? "%s " : "%s\n", cmd->argv[i]);
 
     return 0;
 }
 
-unsigned char
-builtin_exit (cmd_s* cmd){
+// exit [n] : permet de sortir du shell avec la valeur de retour n si n est spécifié, la valeur de retour de la dernière commande lancée sinon
+unsigned char builtin_exit (cmd_s* cmd){
     int n = 0;
     if (cmd->argv[1]){
+        if (cmd->argv[2]){
+            fprintf(stderr, "%s\n", "Too many arguments.");
+            return 1;
+        }
+
         for (int i = 0; cmd->argv[1][i]; i++)
             if (cmd->argv[1][i] >= '0' && cmd->argv[1][i] <= '9'){
                 n *= 10;
@@ -38,36 +47,49 @@ builtin_exit (cmd_s* cmd){
     return 1;
 }
 
+<<<<<<< HEAD
 unsigned char
 builtin_cd (cmd_s* cmd){
     if (cmd->argv[1] == 0) return 1;
     if (chdir(cmd->argv[1]) == 0) return 0;
     perror("mpsh: cd");
     return 1;
+=======
+// cd [dir] : change le répertoire courant
+unsigned char builtin_cd (cmd_s* cmd){
+    if (!cmd->argv[1]) return 0;
+
+    if (chdir(cmd->argv[1])){
+        perror("cd");
+        return 1;
+    }
+
+    return 0;
+>>>>>>> 5c4f8c56d5378d66c2dfacc25df02203e762049e
 }
 
-unsigned char
-builtin_alias (cmd_s* cmd){
+// alias [name=value] : affiche les alias ou met en place un alias
+unsigned char builtin_alias (cmd_s* cmd){
     return 0;
 }
 
-unsigned char
-builtin_export (cmd_s* cmd){
+// export var[=word] : exporte une variable ( i.e. la transforme en variable d'environnement)
+unsigned char builtin_export (cmd_s* cmd){
     return 0;
 }
 
-unsigned char
-builtin_unalias (cmd_s* cmd){
+// unalias name : supprime un alias
+unsigned char builtin_unalias (cmd_s* cmd){
     return 0;
 }
 
-unsigned char
-builtin_type (cmd_s* cmd){
+// type name [name ...] : indique comment chaque nom est interprété (comme alias, commande interne ou commande externe) s'il est utilisé pour lancer une commande
+unsigned char builtin_type (cmd_s* cmd){
     return 0;
 }
 
-unsigned char
-builtin_umask (cmd_s* cmd){
+// umask mode : met en place un masque pour les droits
+unsigned char builtin_umask (cmd_s* cmd){
     return 0;
 }
 
@@ -137,11 +159,10 @@ short is_builtin (char* s){
     return 0;
 }
 
-unsigned char
-exec_builtin(cmd_s* cmd){
+unsigned char exec_builtin(cmd_s* cmd){
     for (int i = 0; builtin_names[i]; i++)
         if (strcmp(cmd->argv[0], builtin_names[i]) == 0)
             return (*(builtin_functions[i]))(cmd);
 
-    return 2;
+    return 1;
 }
