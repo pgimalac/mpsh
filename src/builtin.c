@@ -6,6 +6,7 @@
 #include <readline/history.h>
 
 #include "parsing.h"
+#include "command.h"
 #include "builtin.h"
 
 unsigned char
@@ -41,6 +42,7 @@ unsigned char
 builtin_cd (cmd_s* cmd){
     if (cmd->argv[1] == 0) return 1;
     if (chdir(cmd->argv[1]) == 0) return 0;
+    perror("mpsh: cd");
     return 1;
 }
 
@@ -80,31 +82,38 @@ static int log_10 (int n) {
 }
 
 static short is_number (char *c) {
+    if (!isdigit(*c) && *c != '-') return 0;
+    c++;
     while (isdigit(*c)) c++;
     return *c == 0;
 }
 
 unsigned char
-builtin_history (cmd_s* cmd){
-    int len = where_history();
+builtin_history (cmd_s* cmd) {
     if (cmd->argv[1] != 0) {
         if (!is_number(cmd->argv[1])) {
             fprintf (stderr, "not a number\n");
             return 1;
         }
+
         int n = atoi(cmd->argv[1]);
-        if (n > len) {
-            fprintf(stderr, "too large number\n");
+        if (n > history_length || n == 0) {
+            fprintf(stderr, "invalid argument %d\n", n);
             return 1;
         }
 
-        printf("%s\n", history_get(n)->line);
+        if (n < 0) {
+            stifle_history(-n + 1);
+            return 0;
+        }
+
+        command_line_handler(history_get(n + history_base)->line);
         return 0;
     }
 
-    int margin = log_10(len);
-    for (int i = 1; i <= len; i++)
-        printf("%*d %s\n", margin, i, history_get(i)->line);
+    int margin = log_10(history_length);
+    for (int i = 1; i < history_length; i++)
+        printf("%*d %s\n", margin, i, history_get(i + history_base)->line);
     return 0;
 }
 
