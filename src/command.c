@@ -200,7 +200,7 @@ void command_line_handler (char* input) {
     exec_cmd(parse_ret);
 }
 
-short is_cmd(char* st){ // to improve
+short is_cmd(char* st){ // to improve !
     if (!getenv("PATH"))
         return 0;
 
@@ -210,6 +210,6 @@ short is_cmd(char* st){ // to improve
     return s;
 }
 
-char* find_cmd(char* st){
+char* find_cmd(char* st){ //TODO
     return strdup("TODO");
 }

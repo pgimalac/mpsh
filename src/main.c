@@ -40,10 +40,10 @@ int main (void) {
 
     read_history(0);
 
-    if (!hashmap_get(vars, "PS1"))                              // debug
-        hashmap_add(vars, strdup("PS1"), strdup("mpsh> "), 1);  // debug
+    if (!hashmap_get(vars, "INVITE"))                              // debug
+        hashmap_add(vars, strdup("INVITE"), strdup("mpsh> "), 1);  // debug
 
-    while((s = readline (hashmap_get(vars, "PS1")))) {
+    while((s = readline (hashmap_get(vars, "INVITE")))) {
         command_line_handler(s);
         add_history(s);
         write_history(0);
