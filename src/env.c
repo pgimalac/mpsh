@@ -13,6 +13,6 @@ init_env_variables(hashmap_t *map) {
     while (*envp) {
         value = strdup(*envp++);
         name = strsep(&value, "=");
-        hashmap_add(map, name, value);
+        hashmap_add(map, name, value, 1);
     }
 }

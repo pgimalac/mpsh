@@ -86,11 +86,11 @@ static map_elem *get (hashmap_t *map, char *key) {
     return 0;
 }
 
-short hashmap_add(hashmap_t *map, char *key, char *value) {
+short hashmap_add(hashmap_t *map, char *key, char *value, short f) {
     if (map == 0) return 0;
 
     map_elem *e = get(map, key);
-    if (e == 0) {
+    if (!e) {
         if (map->size + 1 > HASHMAP_RATIO_UPPER_LIMIT * map->capacity)
             if (!resize(map, map->capacity * 2)) return 0;
 
@@ -98,6 +98,8 @@ short hashmap_add(hashmap_t *map, char *key, char *value) {
         return e && list_add(&map->tab[hash(key) % map->capacity], e);
     }
 
+    if (f)
+        free(e->value);
     e->value = value;
 
     return 1;
@@ -108,39 +110,64 @@ char *hashmap_get(hashmap_t *map, char *key) {
     return e ? e->value : 0;
 }
 
-static short map_list_remove (list_t **lst, char *key) {
-    if (*lst == 0) return 1;
-    while (strcmp(key, ((map_elem*)(*lst)->val)->key) != 0)
+static short map_list_remove (list_t **lst, char *key, short f) {
+    if (*lst == 0)
+        return 0;
+
+    while (*lst && strcmp(key, ((map_elem*)(*lst)->val)->key))
         lst = &(*lst)->next;
 
+    if (!*lst)
+        return 0;
+
+    list_t* tmp = *lst;
     *lst = (*lst)->next;
+    if (f){
+        free(((map_elem*)tmp->val)->key);
+        free(((map_elem*)tmp->val)->value);
+    }
+    free(tmp);
     return 1;
 }
 
-short hashmap_remove(hashmap_t *map, char *key) {
-    if (map == 0) return 0;
-    return map_list_remove(&map->tab[hash(key) % map->capacity], key);
+short hashmap_remove(hashmap_t *map, char *key, short f) {
+    if (!map) return 0;
+    return map_list_remove(&map->tab[hash(key) % map->capacity], key, f);
 }
 
 short hashmap_contains (hashmap_t *map, char *key) {
     return get(map, key) != 0;
 }
 
-void hashmap_destroy(hashmap_t *map) {
+void hashmap_destroy(hashmap_t *map, short f) {
     if (map == 0) return;
 
-    for (int i = 0; i < map->capacity; i++, list_destroy(map->tab[i]))
+    for (int i = 0; i < map->capacity; i++)
         for (list_t* l = map->tab[i]; l; free(list_pop(&l)))
-            ;
+            if (f){
+                free(((map_elem*)l->val)->key);
+                free(((map_elem*)l->val)->value);
+            }
     free(map->tab);
     free(map);
 }
 
-void hashmap_print (hashmap_t *map) {
+void hashmap_iterate (hashmap_t *map, void(*f)(char*, char*)){
+    if (!map)
+        return;
+
     map_elem *e;
     for (int i = 0; i < map->capacity; i++)
         for (list_t *l = map->tab[i]; l; l = l->next) {
             e = (map_elem*)l->val;
-            printf("%s: %s\n", e->key, e->value);
+            f(e->key, e->value);
         }
+}
+
+static void map_elem_print (char* k, char* v){
+    printf("%s: %s\n", k, v);
+}
+
+void hashmap_print (hashmap_t *map) {
+    hashmap_iterate(map, map_elem_print);
 }

@@ -41,28 +41,39 @@ short array_add(array_t* a, char* s){
     return 0;
 }
 
-short array_remove_index(array_t* a, int i){
+short array_remove_index(array_t* a, int i, short f){
     if (a == NULL || i < 0 || i >= a->size)
         return 0;
-    --(a->size);
-    for ( ; i < a->size ; i++)
+
+    a->size--;
+
+    if (f)
+        free(a->tab[i]);
+    do
         a->tab[i] = a->tab[i + 1];
+    while (++i < a->size);
+
     if (a->capacity >= 4 * a->size && a->capacity > ARRAY_INITIAL_CAPACITY)
         array_resize(a, a->capacity / 2);
+
     return 1;
 }
 
-short array_remove(array_t* a, char* s){
+short array_remove(array_t* a, char* st, short s){
     if (a != NULL)
         for (int i = 0; i < a->size; i++)
-            if (strcmp(a->tab[i], s) == 0)
-                return array_remove_index(a, i);
+            if (strcmp(a->tab[i], st) == 0)
+                return array_remove_index(a, i, s);
     return 0;
 }
 
-short array_set(array_t* a, int i, char* s){
+short array_set(array_t* a, int i, char* s, short f){
     if (a == NULL || i < 0 || i >= a->size)
         return 0;
+
+    if (f)
+       free(a->tab[i]);
+
     a->tab[i] = s;
     return 1;
 }
@@ -79,8 +90,12 @@ short array_contains(array_t* a, char* s){
     return array_index(a, s) != -1;
 }
 
-void array_destroy(array_t* a){
+void array_destroy(array_t* a, short f){
     if (a != NULL){
+        if (f)
+            for (int i = 0; i < a->size; i++)
+                free(a->tab[i]);
+
         free(a->tab);
         free(a);
     }

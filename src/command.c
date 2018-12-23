@@ -5,10 +5,14 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "command.h"
 #include "lp/parser.h"
 #include "builtin.h"
+#include "array.h"
+#include "completion.h"
 
 void exec_simple_redir (struct simple_redir *red) {
     red++;
@@ -86,7 +90,7 @@ unsigned char exec_simple (struct cmd_s *cmd) {
 }
 
 unsigned char add_variable (struct var_d *var) {
-    if (hashmap_add(vars, var->name, var->value) == -1) {
+    if (hashmap_add(vars, var->name, var->value, 1) == -1) {
         fprintf(stderr, "an error occured while assigniating variable %s\n", var->name);
         return 1;
     }
@@ -194,4 +198,18 @@ void command_line_handler (char* input) {
 
     print_cmd(parse_ret);
     exec_cmd(parse_ret);
+}
+
+short is_cmd(char* st){ // to improve
+    if (!getenv("PATH"))
+        return 0;
+
+    array_t* arr = get_all_files(getenv("PATH"));
+    short s = array_contains(arr, st);
+    array_destroy(arr, 1);
+    return s;
+}
+
+char* find_cmd(char* st){
+    return strdup("TODO");
 }

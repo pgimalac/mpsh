@@ -19,17 +19,17 @@ short array_add(array_t*, char*);
 /**
  * remove element at the given index of the array
  */
-short array_remove_index(array_t*, int);
+short array_remove_index(array_t*, int, short);
 
 /**
  * remove the given element (the first only) of the array
  */
-short array_remove(array_t*, char*);
+short array_remove(array_t*, char*, short);
 
 /**
  * change value of the given index in the element
  */
-short array_set(array_t*, int, char*);
+short array_set(array_t*, int, char*, short);
 
 /**
  * Look for the given element in the list
@@ -45,7 +45,7 @@ short array_contains(array_t*, char*);
 /**
  * free pointer to array and all memory used by this one
  */
-void array_destroy(array_t*);
+void array_destroy(array_t*, short);
 
 /**
  * Return the array and reallocate to have the exact size

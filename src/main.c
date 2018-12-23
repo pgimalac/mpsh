@@ -11,11 +11,12 @@
 #include "array.h"
 #include "hashmap.h"
 #include "parsing.h"
-#include "parser.h"
+#include "lp/parser.h"
 #include "command.h"
 #include "env.h"
 
 hashmap_t *vars;
+hashmap_t *aliases;
 
 int init_readline() {
     rl_readline_name = "mpsh";
@@ -29,13 +30,20 @@ int main (void) {
 
     init_completion();
     init_readline();
+
     vars = hashmap_init();
+    aliases = hashmap_init();
+//    hashmap_add(aliases, strdup("a"), strdup("ls"), 1);
+
     init_env_variables(vars);
     // hashmap_print (vars);
 
     read_history(0);
 
-    while((s = readline ("mpsh> "))) {
+    if (!hashmap_get(vars, "PS1"))                              // debug
+        hashmap_add(vars, strdup("PS1"), strdup("mpsh> "), 1);  // debug
+
+    while((s = readline (hashmap_get(vars, "PS1")))) {
         command_line_handler(s);
         add_history(s);
         write_history(0);

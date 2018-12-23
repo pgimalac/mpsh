@@ -6,12 +6,17 @@
 #include <ctype.h>
 #include <readline/history.h>
 
+#include "hashmap.h"
 #include "builtin.h"
+#include "command.h"
+
+extern hashmap_t *aliases;
 
 // echo $var : affiche la valeur de la variable var
 unsigned char builtin_echo (cmd_s* cmd){
     for (int i = 1; cmd->argv[i]; i++)
         printf(cmd->argv[i + 1] ? "%s " : "%s\n", cmd->argv[i]);
+    printf("\n");
 
     return 0;
 }
@@ -21,7 +26,7 @@ unsigned char builtin_exit (cmd_s* cmd){
     int n = 0;
     if (cmd->argv[1]){
         if (cmd->argv[2]){
-            fprintf(stderr, "%s\n", "Too many arguments.");
+            fprintf(stderr, "%s\n", "exit: too many arguments.");
             return 1;
         }
 
@@ -30,7 +35,7 @@ unsigned char builtin_exit (cmd_s* cmd){
                 n *= 10;
                 n += cmd->argv[1][i] - '0';
             } else{
-                fprintf(stderr, "%s\n", "Invalid argument.");
+                fprintf(stderr, "%s\n", "exit: invalid argument.");
                 return 1;
             }
     }
@@ -38,7 +43,7 @@ unsigned char builtin_exit (cmd_s* cmd){
     if (n >= 0 && n < 256)
         exit(n);
 
-    fprintf(stderr, "%s\n", "The return status must be between 0 and 255.");
+    fprintf(stderr, "%s\n", "exit: the return status must be between 0 and 255.");
     return 1;
 }
 
@@ -54,9 +59,50 @@ unsigned char builtin_cd (cmd_s* cmd){
     return 0;
 }
 
+static void print_alias (char* k, char* v){
+    printf("%s=%s\n", k, v);
+}
+
 // alias [name=value] : affiche les alias ou met en place un alias
 unsigned char builtin_alias (cmd_s* cmd){
-    return 0;
+    if (!cmd || !cmd->argv || !cmd->argv[0] || strcmp("alias", cmd->argv[0]))
+        return 1;
+
+    if (!cmd->argv[1]){ // no argument, print all aliases
+        hashmap_iterate(aliases, print_alias);
+        return 0;
+    }
+
+    unsigned char ret = 0;
+    char* tmp;
+    for (char** st = cmd->argv + 1; *st; st++){
+        int p = -1;
+        for (int i = 0; (*st)[i]; i++)
+            if ((*st)[p] == '='){
+                p = i;
+                break;
+            }
+
+        if (p == 0){
+            fprintf(stderr, "mpsh: %s not found\n", *st + 1);
+            return 1;
+        }
+        if (p == -1){
+            tmp = hashmap_get(aliases, *st);
+            if (tmp)
+                print_alias(*st, tmp);
+            else
+                ret = 1;
+            continue;
+        }
+
+        char* k = strndup(*st, p);
+        char* v = strdup(*st + p + 1);
+
+        hashmap_add(aliases, k, v, 1);
+    }
+
+    return ret;
 }
 
 // export var[=word] : exporte une variable ( i.e. la transforme en variable d'environnement)
@@ -66,12 +112,45 @@ unsigned char builtin_export (cmd_s* cmd){
 
 // unalias name : supprime un alias
 unsigned char builtin_unalias (cmd_s* cmd){
-    return 0;
+    if (!cmd || !cmd->argv || !cmd->argv[0] || strcmp("unalias", cmd->argv[0]))
+        return 1;
+
+    if (!cmd->argv[1]){
+        fprintf(stderr, "%s\n", "unalias: not enough arguments");
+        return 1;
+    }
+
+    unsigned char ret = 0;
+    for (char** st = cmd->argv + 1; *st; st++)
+        if (!hashmap_remove(aliases, *st, 1)){
+            fprintf(stderr, "unalias: no such alias: %s\n", *st);
+            ret = 1;
+        }
+    return ret;
 }
 
 // type name [name ...] : indique comment chaque nom est interprété (comme alias, commande interne ou commande externe) s'il est utilisé pour lancer une commande
 unsigned char builtin_type (cmd_s* cmd){
-    return 0;
+    if (!cmd || !cmd->argv || !cmd->argv[0] || strcmp("type", cmd->argv[0]) || !cmd->argv[1])
+        return 1;
+
+    unsigned char ret = 0;
+    for (char** st = cmd->argv + 1; *st; st++){
+        if (hashmap_contains(aliases, *st))
+            printf("%s is an alias for %s\n", *st, hashmap_get(aliases, *st));
+        else if (is_builtin(*st))
+            printf("%s is a mpsh builtin\n", *st);
+        else if (is_cmd(*st)){
+            char* path = find_cmd(*st);
+            printf("%s is %s\n", *st, path); // add path
+            free(path);
+        } else{
+            ret = 1;
+            printf("%s not found\n", *st);
+        }
+    }
+
+    return ret;
 }
 
 // umask mode : met en place un masque pour les droits
@@ -100,7 +179,7 @@ static short is_number (char *c) {
 // avec un argument -n entier négatif, fixe à n le nombre de commandes enregistrées dans l'historique.
 unsigned char builtin_history (cmd_s* cmd){
     int len = where_history();
-    if (cmd->argv[1] != 0) {
+    if (cmd->argv[1]) {
         if (!is_number(cmd->argv[1])) {
             fprintf (stderr, "not a number\n");
             return 1;

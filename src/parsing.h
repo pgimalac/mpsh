@@ -97,34 +97,24 @@ struct cmd_t {
  * Constructors
  */
 
-struct simple_redir *
-create_simple_redir (redir_t type, int fd1, int fd2);
+simple_redir* create_simple_redir (redir_t type, int fd1, int fd2);
 
-struct file_redir *
-create_file_redir (redir_t type, int fd1, char *name);
+file_redir* create_file_redir (redir_t type, int fd1, char *name);
 
-struct redir *
-redir_from_simple (struct simple_redir *r);
+redir* redir_from_simple (simple_redir *r);
 
-struct redir *
-redir_from_file (struct file_redir *r);
+redir* redir_from_file (file_redir *r);
 
-struct var_d *
-create_var_d (char *name, char *value);
+var_d* create_var_d (char *name, char *value);
 
-struct cmd_s *
-create_cmd_s (char **argv, list_t *redirs);
+cmd_s* create_cmd_s (char **argv, list_t *redirs);
 
-struct cmd_b *
-create_cmd_b (bin_op op, cmd_t *left, cmd_t *right);
+cmd_b* create_cmd_b (bin_op op, cmd_t *left, cmd_t *right);
 
-cmd_t *
-create_cmd_with_simple (struct cmd_s *s);
+cmd_t* create_cmd_with_simple (cmd_s *s);
 
-cmd_t *
-create_cmd_with_bin_op (struct cmd_b *b);
+cmd_t* create_cmd_with_bin_op (cmd_b *b);
 
-cmd_t *
-create_cmd_with_var_def (struct var_d *v);
+cmd_t* create_cmd_with_var_def (var_d *v);
 
 #endif

@@ -10,7 +10,6 @@
 
 #include "array.h"
 #include "builtin.h"
-#include "array.h"
 #include "completion.h"
 
 static char **completions;
@@ -100,8 +99,7 @@ char *command_generator (const char *com, int num){
 
 char ** fileman_completion (const char *com, int start, int end) {
     char **matches;
-    matches = (char **)NULL;
-    end = end;
+    matches = NULL;
 
     if (start == 0)
         matches = rl_completion_matches (com, command_generator);
