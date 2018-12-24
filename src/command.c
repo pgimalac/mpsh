@@ -259,9 +259,9 @@ char* find_cmd(char* st){
 
     for (char* path = strtok(var_path, ":"); path && !buff; path = strtok(NULL, ":")) {
         l = strlen(path);
-        if (path[l - 1] == '/'){
+        if (l >= 1 && path[l - 1] == '/'){
             path[l - 1] = '\0';
-            if (path[l - 2] == '/'){
+            if (l >= 2 && path[l - 2] == '/'){
                 path[l - 2] = '\0';
                 rec = 1;
             }
