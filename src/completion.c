@@ -11,17 +11,20 @@
 #include "array.h"
 #include "builtin.h"
 #include "completion.h"
+#include "hashmap.h"
+
+extern hashmap_t* vars;
 
 static char **completions;
 static int nb_completions;
 
 int fill_with_dir (char *path, array_t *array) {
-    DIR *dir;
     char *buf;
     struct dirent *entry;
     struct stat stat_buf;
+    DIR *dir = opendir(path);
 
-    if ((dir = opendir(path)) == 0) return -1;
+    if (!dir) return -1;
     while ((entry = readdir(dir)))
         if (entry->d_type == DT_REG) {
             int s = strlen(path) + strlen(entry->d_name) + 2;
@@ -48,8 +51,7 @@ array_t* get_all_files (char *var_path) {
 
     array_t *array = array_init();
 
-    for (path = strtok_r(var_path, ":", &saveptr1); path; var_path = 0,
-             path = strtok_r(0, ":", &saveptr1)) {
+    for (path = strtok_r(var_path, ":", &saveptr1); path; path = strtok_r(0, ":", &saveptr1)) {
         if (stat(path, &stat_buf) == 0) {
             if (S_ISDIR(stat_buf.st_mode)) {
                 if (fill_with_dir(path, array) == -1)
@@ -68,8 +70,14 @@ array_t* get_all_files (char *var_path) {
 }
 
 void init_completion () {
-    char *path = strdup(getenv("PATH"));
+    char *path = hashmap_get(vars, "CHEMIN");
+    if (path)
+        path = strdup(path);
+    else
+        return;
+
     array_t *completions_array = get_all_files(path);
+    free(path);
 
     for (char **c = builtin_names; *c; c++)
         array_add(completions_array, *c);

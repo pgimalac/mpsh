@@ -7,6 +7,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
+#include <dirent.h>
 
 #include "command.h"
 #include "lp/parser.h"
@@ -68,6 +70,14 @@ void exec_redirections (struct cmd_s *cmd) {
 unsigned char exec_simple (struct cmd_s *cmd) {
     if (is_builtin(cmd->argv[0]))
         return exec_builtin(cmd);
+
+    char* path = find_cmd(cmd->argv[0]);
+
+    if (!path){
+        fprintf(stderr, "mpsh: can't find %s\n", cmd->argv[0]);
+        return 1;
+    }
+
     int pid, status;
 
     if ((pid = fork()) == -1) {
@@ -78,19 +88,20 @@ unsigned char exec_simple (struct cmd_s *cmd) {
     if (pid == 0) {
         // child process
         exec_redirections (cmd);
-        if (execvp(cmd->argv[0], cmd->argv) == -1) {
-            perror("mpsh:");
+        if (execv(path, cmd->argv) == -1) {
+            perror("mpsh");
             return 1;
         }
         return 0;
     }
 
     waitpid(pid, &status, 0);
+    free(path);
     return status;
 }
 
 unsigned char add_variable (struct var_d *var) {
-    if (hashmap_add(vars, var->name, var->value, 1) == -1) {
+    if (!hashmap_add(vars, var->name, var->value, 1)) {
         fprintf(stderr, "an error occured while assigniating variable %s\n", var->name);
         return 1;
     }
@@ -103,11 +114,11 @@ unsigned char exec_pipe (cmd_t *left, cmd_t *right) {
     int fds[2], pid;
 
     if (pipe(fds) != 0) {
-        perror("mpsh:");
+        perror("mpsh");
         return 1;
     }
     if ((pid = fork()) == -1) {
-        perror("mpsh:");
+        perror("mpsh");
         return 1;
     }
 
@@ -169,7 +180,7 @@ void print_cmd (cmd_t *cmd) {
         printf("\n");
         printf("redirections: \n");
         for (list_t *e = cmd->cmd_sim->redirs; e; e = e->next) {
-            struct redir *r = e->val;
+            struct redir *r = (redir*)e->val;
             if (r->is_simple)
                 printf("-> %d %d %d\n", r->sredir->type, r->sredir->fd1, r->sredir->fd2);
             else
@@ -200,16 +211,73 @@ void command_line_handler (char* input) {
     exec_cmd(parse_ret);
 }
 
-short is_cmd(char* st){ // to improve !
-    if (!getenv("PATH"))
-        return 0;
-
-    array_t* arr = get_all_files(getenv("PATH"));
-    short s = array_contains(arr, st);
-    array_destroy(arr, 1);
-    return s;
+static char* strapp(char* str1, char* str2, char* str3){
+    int l1 = strlen(str1);
+    int l2 = strlen(str2);
+    int l3 = strlen(str3);
+    char* str = malloc(sizeof(char*) * (l1 + l2 + l3 + 1));
+    if (str){
+        strcpy(str, str1);
+        strcpy(str + l1, str2);
+        strcpy(str + l1 + l2, str3);
+    }
+    return str;
 }
 
-char* find_cmd(char* st){ //TODO
-    return strdup("TODO");
+static char* search_dir(char* st, char* path, short rec){
+    DIR* dir = opendir(path);
+    if (!dir){
+        perror("mpsh");
+        return NULL;
+    }
+
+    char* ret = NULL;
+    struct dirent *entry;
+    while (!ret && (entry = readdir(dir)))
+        if (!strcmp(".", entry->d_name) || !strcmp("..", entry->d_name))
+            continue;
+        else if (entry->d_type == DT_REG) {
+            if (!strcmp(st, entry->d_name))
+                ret = strapp(path, "/", st);
+        } else if (rec && entry->d_type == DT_DIR)
+            ret = search_dir(st, strapp(path, "/", entry->d_name), rec);
+
+    free(path);
+    closedir(dir);
+    return ret;
 }
+
+char* find_cmd(char* st){
+    char* var_path = hashmap_get(vars, "CHEMIN");
+    if (!var_path)
+        return NULL;
+    var_path = strdup(var_path);
+
+    int l;
+    short rec = 0;
+    char* buff = NULL;
+
+    for (char* path = strtok(var_path, ":"); path && !buff; path = strtok(NULL, ":")) {
+        l = strlen(path);
+        if (path[l - 1] == '/'){
+            path[l - 1] = '\0';
+            if (path[l - 2] == '/'){
+                path[l - 2] = '\0';
+                rec = 1;
+            }
+        }
+
+        buff = search_dir(st, strapp(path, "/", ""), rec);
+    }
+
+    free(var_path);
+    return buff;
+}
+
+short is_cmd(char* st){
+    char* s = find_cmd(st);
+    short ret = s != NULL;
+    free(s);
+    return ret;
+}
+
