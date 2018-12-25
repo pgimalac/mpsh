@@ -123,14 +123,14 @@ unsigned char exec_pipe (cmd_t *left, cmd_t *right, int fds[REGISTER_TABLE_SIZE]
     }
 
     if (pid == 0) {
-        close(fdpipe[1]);
-        fds[0] = fdpipe[0];
-        return exec_with_redirections(right, fds);
+        close(fdpipe[0]);
+        fds[1] = fdpipe[1];
+        return exec_with_redirections(left, fds);
     }
 
-    close(fdpipe[0]);
-    fds[1] = fdpipe[1];
-    return exec_with_redirections(left, fds);
+    close(fdpipe[1]);
+    fds[0] = fdpipe[0];
+    return exec_with_redirections(right, fds);
 }
 
 unsigned char exec_with_redirections (cmd_t *cmd, int fds[REGISTER_TABLE_SIZE]) {
