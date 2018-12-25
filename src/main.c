@@ -40,6 +40,8 @@ int main (void) {
 
     read_history(0);
 
+    if (!hashmap_get(vars, "CHEMIN"))                                                    // debug
+        hashmap_add(vars, strdup("CHEMIN"), strdup("/usr/local/bin:/usr/bin:/bin"), 1);  // debug
     if (!hashmap_get(vars, "INVITE"))                              // debug
         hashmap_add(vars, strdup("INVITE"), strdup("mpsh> "), 1);  // debug
 

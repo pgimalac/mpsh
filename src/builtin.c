@@ -153,24 +153,48 @@ unsigned char builtin_unalias (cmd_s* cmd, int fdin, int fdout, int fderr){
  * s'il est utilisé pour lancer une commande
  */
 unsigned char builtin_type (cmd_s* cmd, int fdin, int fdout, int fderr){
-    if (!cmd || !cmd->argv || !cmd->argv[0] || strcmp("type", cmd->argv[0]) || !cmd->argv[1])
-        return 1;
-
     unsigned char ret = 0;
-    for (char** st = cmd->argv + 1; *st; st++){
+    for (char** st = cmd->argv + 1; *st; st++)
         if (hashmap_contains(aliases, *st))
             dprintf(fdout, "%s is an alias for %s\n", *st, hashmap_get(aliases, *st));
         else if (is_builtin(*st))
             dprintf(fdout, "%s is a mpsh builtin\n", *st);
-        else if (is_cmd(*st)){
+        else {
             char* path = find_cmd(*st);
-            dprintf(fdout, "%s is %s\n", *st, path); // add path
-            free(path);
-        } else{
-            ret = 1;
-            dprintf(fdout, "%s not found\n", *st);
+            if (path){
+                dprintf(fdout, "%s\n", path);
+                free(path);
+            } else {
+                ret = 1;
+                dprintf(fderr, "%s not found\n", *st);
+            }
         }
-    }
+
+
+    return ret;
+}
+
+/**
+ * Bonus builtin : which (because of PATH / CHEMIN)
+ * (almost the same as type)
+ */
+unsigned char builtin_which (cmd_s* cmd, int fdin, int fdout, int fderr){
+    unsigned char ret = 0;
+    for (char** st = cmd->argv + 1; *st; st++)
+        if (hashmap_contains(aliases, *st))
+            dprintf(fdout, "%s: aliased to %s\n", *st, hashmap_get(aliases, *st));
+        else if (is_builtin(*st))
+            dprintf(fdout, "%s: mpsh builtin command\n", *st);
+        else {
+            char* path = find_cmd(*st);
+            if (path){
+                dprintf(fdout, "%s\n", path);
+                free(path);
+            } else {
+                ret = 1;
+                dprintf(fderr, "%s not found\n", *st);
+            }
+        }
 
     return ret;
 }
@@ -207,8 +231,7 @@ static short is_number (char *c) {
  * - avec un argument `-n` entier négatif,
  *   fixe à `n` le nombre de commandes enregistrées dans l'historique.
  */
-unsigned char
-builtin_history (cmd_s* cmd, int fdin, int fdout, int fderr) {
+unsigned char builtin_history (cmd_s* cmd, int fdin, int fdout, int fderr) {
     if (cmd->argv[1]) {
         if (!is_number(cmd->argv[1])) {
             dprintf (fderr, "not a number\n");
@@ -236,17 +259,18 @@ builtin_history (cmd_s* cmd, int fdin, int fdout, int fderr) {
     return 0;
 }
 
+
 char* builtin_names [] = {"cd", "echo", "alias",
                           "exit", "export", "unalias",
                           "type", "umask", "history",
-                          NULL};
+                          "which", NULL};
 
 typedef unsigned char (*builtin)(cmd_s*, int fdin, int fdout, int fderr);
 
 builtin builtin_functions[] = {builtin_cd, builtin_echo, builtin_alias,
                                builtin_exit, builtin_export, builtin_unalias,
                                builtin_type, builtin_umask, builtin_history,
-                               NULL};
+                               builtin_which, NULL};
 
 short is_builtin (char* s){
     for (int i = 0; builtin_names[i]; i++)
