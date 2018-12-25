@@ -5,7 +5,6 @@
 #include "hashmap.h"
 #include "parsing.h"
 #include "parser.h"
-#include "env.h"
 
     static char *cat(char *str1, char *str2) {
         char *buf = malloc(strlen(str1) + strlen(str2) + 1);
@@ -37,7 +36,7 @@ ident   ({alpha}|{dig}|{special})+
 %%
 
 <*>"$"{var_id} {
-    char *value = get_var(yytext + 1);
+    char *value = hashmap_get(vars, yytext + 1);
     value = value ? value : yytext;
     if (YY_START == INITIAL) {
         yylval.value = value;

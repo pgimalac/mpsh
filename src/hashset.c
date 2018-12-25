@@ -5,7 +5,7 @@
 #include <unistd.h>
 #include <string.h>
 
-#define HASHSET_INITIAL_CAPACITY 16
+#define HASHSET_INITIAL_CAPACITY 128
 #define HASHSET_RATIO_UPPER_LIMIT 0.8
 #define HASHSET_RATIO_LOWER_LIMIT 0.1
 
@@ -56,8 +56,8 @@ short hashset_contains(hashset_t* h, char* s){
     if (h == NULL) return 0;
 
     for (list_t* l = h->tab[hash(s) % h->capacity]; l != NULL; l = l->next)
-        if (strcmp(l->val, s) == 0)
-            return 1;
+	if (strcmp(l->val, s) == 0)
+	    return 1;
 
     return 0;
 }
@@ -66,11 +66,11 @@ short hashset_add(hashset_t* h, char* s){
     if (h == NULL) return 0;
 
     if(!hashset_contains(h, s)){
-        if (h->size + 1 > HASHSET_RATIO_UPPER_LIMIT * h->capacity)
-            resize(h, h->capacity * 2);
-        list_add(&h->tab[hash(s) % h->capacity], s);
-        h->size ++;
-        return 1;
+	if (h->size + 1 > HASHSET_RATIO_UPPER_LIMIT * h->capacity)
+	    resize(h, h->capacity * 2);
+	list_add(&h->tab[hash(s) % h->capacity], s);
+	h->size ++;
+	return 1;
     }
 
     return 0;
@@ -97,20 +97,18 @@ short hashset_remove(hashset_t* h, char* s){
         hashset_list_remove(&h->tab[i], s);
         h->size--;
         if (h->size < HASHSET_RATIO_LOWER_LIMIT * h->capacity &&
-            h->size > HASHSET_INITIAL_CAPACITY)
+	    h->size > HASHSET_INITIAL_CAPACITY)
             resize(h, h->capacity / 2);
         return 1;
     }
     return 0;
 }
 
-void hashset_destroy(hashset_t* h, short f){
+void hashset_destroy(hashset_t* h){
     if (h == 0) return;
 
     for (int i = 0; i < h->capacity; i++)
-        for (list_t* l = h->tab[i]; l; free(list_pop(&l)))
-            if (f)
-                free(l->val);
+        list_destroy(h->tab[i]);
     free(h->tab);
     free(h);
 }

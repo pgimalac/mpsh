@@ -117,18 +117,4 @@ cmd_t* create_cmd_with_bin_op (cmd_b *b);
 
 cmd_t* create_cmd_with_var_def (var_d *v);
 
-void free_var_d(var_d*);
-
-void free_simple_redir(simple_redir*);
-
-void free_file_redir(file_redir*);
-
-void free_redir (redir*);
-
-void free_cmd_s(cmd_s*);
-
-void free_cmd_b(cmd_b*);
-
-void free_cmd_t(cmd_t*);
-
 #endif
