@@ -31,6 +31,6 @@ short hashset_contains(hashset_t*, char*);
 /**
  * free all memory used by the set
  */
-void hashset_destroy(hashset_t*, short);
+void hashset_destroy(hashset_t*);
 
 #endif

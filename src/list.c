@@ -73,7 +73,8 @@ void list_destroy(list_t* l){
     }
 }
 
-void ** list_to_tab(list_t *list, size_t sz) {
+void **
+list_to_tab(list_t *list, size_t sz) {
     int length = list_size(list) + 1;
     void **tab = malloc(sz * length);
     void **tabi = tab;
