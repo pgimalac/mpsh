@@ -11,10 +11,15 @@
 #include <dirent.h>
 
 #include "command.h"
+#include "hashset.h"
 #include "lp/parser.h"
 #include "builtin.h"
 #include "array.h"
 #include "completion.h"
+#include "env.h"
+#include "list.h"
+
+extern hashmap_t* aliases;
 
 void exec_simple_redir (struct simple_redir *red) {
     red++;
@@ -67,7 +72,47 @@ void exec_redirections (struct cmd_s *cmd) {
     }
 }
 
+static void find_final_alias(cmd_s* cmd){
+    hashset_t* set = hashset_init();
+    list_t *head = list_init(cmd->argv[0], NULL), *tail = head, *iter;
+    for (char** st = cmd->argv; *st; st++){
+        tail->next = list_init(*st, NULL);
+        tail = tail->next;
+    }
+
+    char *st;
+    while(hashmap_contains(aliases, head->val)){
+        st = strdup(hashmap_get(aliases, head->val));
+        if (hashset_contains(set, st)){
+
+            list_destroy(head);
+            return;
+        }
+
+        hashset_add(set, st);
+        iter = head->next;
+
+        free(head->val);
+        free(head);
+
+        char* tmp = strtok(st, " ");
+        head = list_init(strdup(tmp), iter);
+        while ((tmp = strtok(NULL, " ")))
+            iter = list_init(strdup(tmp), iter)->next;
+        free(st);
+    }
+
+    free(cmd->argv);
+    cmd->argv = (char**)list_to_tab(head, sizeof(char*));
+}
+
 unsigned char exec_simple (struct cmd_s *cmd) {
+    if (!cmd || !cmd->argv || !cmd->argv[0] || !cmd->argv[0][0])
+        return 0;
+
+    if (hashmap_contains(aliases, cmd->argv[0]))
+        find_final_alias(cmd);
+
     if (is_builtin(cmd->argv[0]))
         return exec_builtin(cmd);
 
@@ -101,11 +146,7 @@ unsigned char exec_simple (struct cmd_s *cmd) {
 }
 
 unsigned char add_variable (struct var_d *var) {
-    if (!hashmap_add(vars, var->name, var->value, 1)) {
-        fprintf(stderr, "an error occured while assigniating variable %s\n", var->name);
-        return 1;
-    }
-
+    add_var(strdup(var->name), strdup(var->value), 0);
     return 0;
 }
 
@@ -134,6 +175,7 @@ unsigned char exec_pipe (cmd_t *left, cmd_t *right) {
 }
 
 unsigned char exec_bin (struct cmd_b *cmd) {
+    if (!cmd) return 0;
     int left_status;
 
     switch (cmd->type) {
@@ -201,6 +243,12 @@ void print_cmd (cmd_t *cmd) {
     }
 }
 
+static char* uchar_to_string(unsigned char c){
+    char* buff = malloc(sizeof(char) * 4);
+    sprintf(buff, "%d", c);
+    return buff;
+}
+
 void command_line_handler (char* input) {
     if (!input) return;
 
@@ -208,19 +256,17 @@ void command_line_handler (char* input) {
     if (yyparse() != 0) return;
 
     print_cmd(parse_ret);
-    exec_cmd(parse_ret);
+    unsigned char ret = exec_cmd(parse_ret);
+
+    add_var("?", uchar_to_string(ret), 0);
+    free_cmd_t(parse_ret);
 }
 
 static char* strapp(char* str1, char* str2, char* str3){
-    int l1 = strlen(str1);
-    int l2 = strlen(str2);
-    int l3 = strlen(str3);
-    char* str = malloc(sizeof(char*) * (l1 + l2 + l3 + 1));
-    if (str){
-        strcpy(str, str1);
-        strcpy(str + l1, str2);
-        strcpy(str + l1 + l2, str3);
-    }
+    int l = strlen(str1) + strlen(str2) + strlen(str3) + 1;
+    char* str = malloc(sizeof(char*) * l);
+    if (str)
+        sprintf(str, "%s%s%s", str1, str2, str3);
     return str;
 }
 
@@ -247,11 +293,30 @@ static char* search_dir(char* st, char* path, short rec){
     return ret;
 }
 
+static short is_valid_path(char* st){
+    struct stat* s = malloc(sizeof(struct stat));
+    short ret = stat(st, s) == 0 && s->st_mode & S_IFREG;
+
+    free(s);
+    return ret;
+}
+
 char* find_cmd(char* st){
-    char* var_path = hashmap_get(vars, "CHEMIN");
+    if (!st)
+        return NULL;
+
+    short s = 0;
+    for (char* tmp = st; *tmp; tmp++)
+        if (*tmp == '/'){
+            s = 1;
+            break;
+        }
+    if (s && is_valid_path(st))
+        return st;
+
+    char* var_path = get_var("CHEMIN");
     if (!var_path)
         return NULL;
-    var_path = strdup(var_path);
 
     int l;
     short rec = 0;

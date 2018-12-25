@@ -9,8 +9,10 @@
 #include "hashmap.h"
 #include "command.h"
 #include "builtin.h"
+#include "env.h"
 
 extern hashmap_t *aliases;
+extern char** environ;
 
 /**
  * echo $var :
@@ -65,6 +67,10 @@ unsigned char builtin_cd (cmd_s* cmd){
         perror("cd");
         return 1;
     }
+
+    char* st = getcwd(0, 0);
+    if (st)
+        add_var(strdup("PWD"), st, 0);
 
     return 0;
 }
@@ -123,6 +129,24 @@ unsigned char builtin_alias (cmd_s* cmd){
  * exporte une variable ( i.e. la transforme en variable d'environnement)
  */
 unsigned char builtin_export (cmd_s* cmd){
+    if (!cmd || !cmd->argv || !cmd->argv[0] || strcmp("unalias", cmd->argv[0]))
+        return 1;
+
+    for (char** st = cmd->argv; *st; st++){
+        short s = -1;
+        for (int i = 0; (*st)[i]; i++)
+            if ((*st)[i] == '='){
+                s = i;
+                break;
+            }
+
+        if (s == -1)
+            add_var(*st, NULL, 1);
+        else {
+            (*st)[s] = '\0';
+            add_var(*st, strdup(*st + s + 1), 1);
+        }
+    }
     return 0;
 }
 

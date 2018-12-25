@@ -12,6 +12,7 @@
 #include "builtin.h"
 #include "completion.h"
 #include "hashmap.h"
+#include "env.h"
 
 extern hashmap_t* vars;
 
@@ -70,10 +71,8 @@ array_t* get_all_files (char *var_path) {
 }
 
 void init_completion () {
-    char *path = hashmap_get(vars, "CHEMIN");
-    if (path)
-        path = strdup(path);
-    else
+    char *path = get_var("CHEMIN");
+    if (!path)
         return;
 
     array_t *completions_array = get_all_files(path);
