@@ -35,21 +35,31 @@ int main (void) {
     aliases = hashmap_init();
 //    hashmap_add(aliases, strdup("a"), strdup("ls"), 1);
 
-    init_env_variables(vars);
+    init_env_variables();
     // hashmap_print (vars);
 
     read_history(0);
 
-    if (!hashmap_get(vars, "CHEMIN"))                                                    // debug
-        hashmap_add(vars, strdup("CHEMIN"), strdup("/usr/local/bin:/usr/bin:/bin"), 1);  // debug
-    if (!hashmap_get(vars, "INVITE"))                              // debug
-        hashmap_add(vars, strdup("INVITE"), strdup("mpsh> "), 1);  // debug
+    // debug
+        char* tmp;
+        if ((tmp = get_var("CHEMIN")))
+            free(tmp);
+        else
+            add_var(strdup("CHEMIN"), strdup("/usr/local/bin:/usr/bin:/bin"), 1);
 
-    while((s = readline (hashmap_get(vars, "INVITE")))) {
+        if ((tmp = get_var("INVITE")))
+            free(tmp);
+        else
+            add_var(strdup("INVITE"), strdup("mpsh> "), 0);
+    // end
+
+    char* invite;
+    while((s = readline ((invite = get_var("INVITE"))))) {
         command_line_handler(s);
         add_history(s);
         write_history(0);
         free(s);
+        free(invite);
     }
     return 0;
 }
