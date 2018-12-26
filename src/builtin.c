@@ -21,7 +21,6 @@ extern char** environ;
 unsigned char builtin_echo (cmd_s* cmd){
     for (int i = 1; cmd->argv[i]; i++)
         printf(cmd->argv[i + 1] ? "%s " : "%s\n", cmd->argv[i]);
-    printf("\n");
 
     return 0;
 }
@@ -61,7 +60,7 @@ unsigned char builtin_exit (cmd_s* cmd){
  * change le répertoire courant
  */
 unsigned char builtin_cd (cmd_s* cmd){
-    if (!cmd->argv[1]) return 0;
+    if (!cmd || !cmd->argv || !cmd->argv[1]) return 0;
 
     if (chdir(cmd->argv[1])){
         perror("cd");
@@ -84,7 +83,7 @@ static void print_alias (char* k, char* v){
  * affiche les alias ou met en place un alias
  */
 unsigned char builtin_alias (cmd_s* cmd){
-    if (!cmd || !cmd->argv || !cmd->argv[0] || strcmp("alias", cmd->argv[0]))
+    if (!cmd || !cmd->argv || !cmd->argv[0])
         return 1;
 
     if (!cmd->argv[1]){ // no argument, print all aliases
@@ -129,8 +128,14 @@ unsigned char builtin_alias (cmd_s* cmd){
  * exporte une variable ( i.e. la transforme en variable d'environnement)
  */
 unsigned char builtin_export (cmd_s* cmd){
-    if (!cmd || !cmd->argv || !cmd->argv[0] || strcmp("unalias", cmd->argv[0]))
+    if (!cmd || !cmd->argv || !cmd->argv[0])
         return 1;
+
+    if (!cmd->argv[1]){
+        for (char** st = environ; *st; st++)
+            printf("%s\n", *st);
+        return 0;
+    }
 
     for (char** st = cmd->argv; *st; st++){
         short s = -1;
@@ -154,7 +159,7 @@ unsigned char builtin_export (cmd_s* cmd){
  * unalias name : supprime un alias
  */
 unsigned char builtin_unalias (cmd_s* cmd){
-    if (!cmd || !cmd->argv || !cmd->argv[0] || strcmp("unalias", cmd->argv[0]))
+    if (!cmd || !cmd->argv || !cmd->argv[0])
         return 1;
 
     if (!cmd->argv[1]){
@@ -178,7 +183,7 @@ unsigned char builtin_unalias (cmd_s* cmd){
  * s'il est utilisé pour lancer une commande
  */
 unsigned char builtin_type (cmd_s* cmd){
-    if (!cmd || !cmd->argv || !cmd->argv[0] || strcmp("type", cmd->argv[0]) || !cmd->argv[1])
+    if (!cmd || !cmd->argv || !cmd->argv[0] || !cmd->argv[1])
         return 1;
 
     unsigned char ret = 0;
@@ -207,7 +212,7 @@ unsigned char builtin_type (cmd_s* cmd){
  * (almost the same as type)
  */
 unsigned char builtin_which (cmd_s* cmd){
-    if (!cmd || !cmd->argv || !cmd->argv[0] || strcmp("which", cmd->argv[0]) || !cmd->argv[1])
+    if (!cmd || !cmd->argv || !cmd->argv[0] || !cmd->argv[1])
         return 1;
 
     unsigned char ret = 0;
