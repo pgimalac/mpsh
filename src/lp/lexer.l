@@ -29,7 +29,7 @@ alpha   [A-Za-z]
 dig     [0-9]
 escape  \\.
 var_id  {alpha}({alpha}|{dig})*
-ident   ({alpha}|{dig}|{special})+
+ident   [^=|&<>$\\" "]+
 
 %x VAR
 %x IDENT
@@ -177,7 +177,7 @@ ident   ({alpha}|{dig}|{special})+
     BEGIN VAR;
 }
 
-<VAR>[^"\n"$;{special}&" "]+ {
+<VAR>[^"\n"$;&" "]+ {
     yylval.value = cat(yylval.value, yytext);
 }
 
