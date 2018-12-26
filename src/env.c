@@ -27,6 +27,13 @@ char* get_var (char* k){
     return NULL;
 }
 
+char* secure_get_var(char* k){
+    char* s = get_var(k);
+    if (s)
+        return s;
+    return strdup("");
+}
+
 /**
  * Takes a key, a value, a short
  * Both the key and the value must be free-able and not touched after given to this function

@@ -13,6 +13,7 @@
 
 extern hashmap_t *aliases;
 extern char** environ;
+extern void exit_mpsh(int);
 
 /**
  * echo $var :
@@ -49,7 +50,7 @@ unsigned char builtin_exit (cmd_s* cmd, int fdin, int fdout, int fderr){
     }
 
     if (n >= 0 && n < 256)
-        exit(n);
+        exit_mpsh(n);
 
     dprintf(fderr, "%s\n", "exit: the return status must be between 0 and 255.");
     return 1;
