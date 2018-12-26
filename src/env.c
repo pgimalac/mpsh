@@ -21,10 +21,8 @@ char* get_var (char* k){
     if (!k)
         return NULL;
 
-    char* ret = getenv(k);
-    if (ret)
-        return strdup(ret + strlen(k) + 1);
-    if ((ret = hashmap_get(vars, k)))
+    char* ret;
+    if ((ret = getenv(k)) || (ret = hashmap_get(vars, k)))
         return strdup(ret);
     return NULL;
 }

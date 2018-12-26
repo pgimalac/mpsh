@@ -81,12 +81,12 @@ static void find_final_alias(cmd_s* cmd){
     }
 
     char *st;
+    short s = 1;
     while(hashmap_contains(aliases, head->val)){
         st = strdup(hashmap_get(aliases, head->val));
         if (hashset_contains(set, st)){
-
-            list_destroy(head);
-            return;
+            s = 0;
+            break;
         }
 
         hashset_add(set, st);
@@ -102,8 +102,13 @@ static void find_final_alias(cmd_s* cmd){
         free(st);
     }
 
-    free(cmd->argv);
-    cmd->argv = (char**)list_to_tab(head, sizeof(char*));
+    hashset_destroy(set, 1);
+    if (s){
+        free(cmd->argv);
+        cmd->argv = (char**)list_to_tab(head, sizeof(char*));
+    } else
+        list_destroy(head);
+
 }
 
 unsigned char exec_simple (struct cmd_s *cmd) {
@@ -258,7 +263,7 @@ void command_line_handler (char* input) {
     print_cmd(parse_ret);
     unsigned char ret = exec_cmd(parse_ret);
 
-    add_var("?", uchar_to_string(ret), 0);
+    add_var(strdup("?"), uchar_to_string(ret), 0);
     free_cmd_t(parse_ret);
 }
 

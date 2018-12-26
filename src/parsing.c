@@ -107,21 +107,25 @@ cmd_t* create_cmd_with_var_def (var_d *v) {
 }
 
 void free_var_d(var_d* v){
+    if (!v) return;
     free(v->name);
     free(v->value);
     free(v);
 }
 
 void free_simple_redir(simple_redir* s){
+    if (!s) return;
     free(s);
 }
 
 void free_file_redir(file_redir* s){
+    if (!s) return;
     free(s->fname);
     free(s);
 }
 
 void free_redir (redir* r){
+    if (!r) return;
     if (r->is_simple)
         free(r->sredir);
     else
@@ -130,6 +134,7 @@ void free_redir (redir* r){
 }
 
 void free_cmd_s(cmd_s* c){
+    if (!c) return;
     for (char** tmp = c->argv; *tmp; tmp++)
         free(*tmp);
     free(c->argv);
@@ -140,12 +145,14 @@ void free_cmd_s(cmd_s* c){
 }
 
 void free_cmd_b(cmd_b* c){
+    if (!c) return;
     free_cmd_t(c->left);
     free_cmd_t(c->right);
     free(c);
 }
 
 void free_cmd_t(cmd_t* c){
+    if (!c) return;
     if (c->type == BIN)
         free_cmd_b(c->cmd_bin);
     else if (c->type == SIMPLE)

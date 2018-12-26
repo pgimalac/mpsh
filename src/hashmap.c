@@ -98,8 +98,11 @@ short hashmap_add(hashmap_t *map, char *key, char *value, short f) {
         return e && list_add(&map->tab[hash(key) % map->capacity], e);
     }
 
-    if (f)
+    if (f){
+        free(e->key);
         free(e->value);
+    }
+    e->key = key;
     e->value = value;
 
     return 1;
@@ -111,21 +114,28 @@ char *hashmap_get(hashmap_t *map, char *key) {
 }
 
 static short map_list_remove (list_t **lst, char *key, short f) {
-    if (*lst == 0)
+    if (!lst || !*lst)
         return 0;
 
-    while (*lst && strcmp(key, ((map_elem*)(*lst)->val)->key))
-        lst = &(*lst)->next;
+    list_t* tmp;
+    if (strcmp(key, ((map_elem*)(*lst)->val)->key) == 0){
+        tmp = (*lst);
+        *lst = (*lst)->next;
+    } else {
+        while ((*lst)->next && strcmp(key, ((map_elem*)(*lst)->next->val)->key))
+            lst = &(*lst)->next;
 
-    if (!*lst)
-        return 0;
+        if (!*lst)
+            return 0;
 
-    list_t* tmp = *lst;
-    *lst = (*lst)->next;
+        tmp = (*lst)->next;
+        (*lst)->next = tmp->next;
+    }
     if (f){
         free(((map_elem*)tmp->val)->key);
         free(((map_elem*)tmp->val)->value);
     }
+    free(tmp->val);
     free(tmp);
     return 1;
 }
