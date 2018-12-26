@@ -18,9 +18,9 @@ extern char** environ;
  * echo $var :
  * affiche la valeur de la variable var
  */
-unsigned char builtin_echo (cmd_s* cmd){
+unsigned char builtin_echo (cmd_s* cmd, int fdin, int fdout, int fderr){
     for (int i = 1; cmd->argv[i]; i++)
-        printf(cmd->argv[i + 1] ? "%s " : "%s\n", cmd->argv[i]);
+        dprintf(fdout, cmd->argv[i + 1] ? "%s " : "%s\n", cmd->argv[i]);
 
     return 0;
 }
@@ -30,11 +30,11 @@ unsigned char builtin_echo (cmd_s* cmd){
  * permet de sortir du shell avec la valeur de retour n si n est spécifié,
  * la valeur de retour de la dernière commande lancée sinon
  */
-unsigned char builtin_exit (cmd_s* cmd){
+unsigned char builtin_exit (cmd_s* cmd, int fdin, int fdout, int fderr){
     int n = 0;
     if (cmd->argv[1]){
         if (cmd->argv[2]){
-            fprintf(stderr, "%s\n", "exit: too many arguments.");
+            dprintf(fderr, "%s\n", "exit: too many arguments.");
             return 1;
         }
 
@@ -43,7 +43,7 @@ unsigned char builtin_exit (cmd_s* cmd){
                 n *= 10;
                 n += cmd->argv[1][i] - '0';
             } else{
-                fprintf(stderr, "%s\n", "exit: invalid argument.");
+                dprintf(fderr, "%s\n", "exit: invalid argument.");
                 return 1;
             }
     }
@@ -51,7 +51,7 @@ unsigned char builtin_exit (cmd_s* cmd){
     if (n >= 0 && n < 256)
         exit(n);
 
-    fprintf(stderr, "%s\n", "exit: the return status must be between 0 and 255.");
+    dprintf(fderr, "%s\n", "exit: the return status must be between 0 and 255.");
     return 1;
 }
 
@@ -59,7 +59,7 @@ unsigned char builtin_exit (cmd_s* cmd){
  * cd [dir] :
  * change le répertoire courant
  */
-unsigned char builtin_cd (cmd_s* cmd){
+unsigned char builtin_cd (cmd_s* cmd, int fdin, int fdout, int fderr){
     if (!cmd || !cmd->argv || !cmd->argv[1]) return 0;
 
     if (chdir(cmd->argv[1])){
@@ -82,7 +82,7 @@ static void print_alias (char* k, char* v){
  * alias [name=value] :
  * affiche les alias ou met en place un alias
  */
-unsigned char builtin_alias (cmd_s* cmd){
+unsigned char builtin_alias (cmd_s* cmd, int fdin, int fdout, int fderr){
     if (!cmd || !cmd->argv || !cmd->argv[0])
         return 1;
 
@@ -102,7 +102,7 @@ unsigned char builtin_alias (cmd_s* cmd){
             }
 
         if (p == 0){
-            fprintf(stderr, "mpsh: %s not found\n", *st + 1);
+            dprintf(fderr, "mpsh: %s not found\n", *st + 1);
             return 1;
         }
         if (p == -1){
@@ -127,13 +127,13 @@ unsigned char builtin_alias (cmd_s* cmd){
  * export var[=word] :
  * exporte une variable ( i.e. la transforme en variable d'environnement)
  */
-unsigned char builtin_export (cmd_s* cmd){
+unsigned char builtin_export (cmd_s* cmd, int fdin, int fdout, int fderr){
     if (!cmd || !cmd->argv || !cmd->argv[0])
         return 1;
 
     if (!cmd->argv[1]){
         for (char** st = environ; *st; st++)
-            printf("%s\n", *st);
+            dprintf(fdin, "%s\n", *st);
         return 0;
     }
 
@@ -158,19 +158,19 @@ unsigned char builtin_export (cmd_s* cmd){
 /**
  * unalias name : supprime un alias
  */
-unsigned char builtin_unalias (cmd_s* cmd){
+unsigned char builtin_unalias (cmd_s* cmd, int fdin, int fdout, int fderr){
     if (!cmd || !cmd->argv || !cmd->argv[0])
         return 1;
 
     if (!cmd->argv[1]){
-        fprintf(stderr, "%s\n", "unalias: not enough arguments");
+        dprintf(fderr, "%s\n", "unalias: not enough arguments");
         return 1;
     }
 
     unsigned char ret = 0;
     for (char** st = cmd->argv + 1; *st; st++)
         if (!hashmap_remove(aliases, *st, 1)){
-            fprintf(stderr, "unalias: no such alias: %s\n", *st);
+            dprintf(fderr, "unalias: no such alias: %s\n", *st);
             ret = 1;
         }
     return ret;
@@ -182,27 +182,27 @@ unsigned char builtin_unalias (cmd_s* cmd){
  * (comme alias, commande interne ou commande externe)
  * s'il est utilisé pour lancer une commande
  */
-unsigned char builtin_type (cmd_s* cmd){
+
+unsigned char builtin_type (cmd_s* cmd, int fdin, int fdout, int fderr){
     if (!cmd || !cmd->argv || !cmd->argv[0] || !cmd->argv[1])
         return 1;
 
     unsigned char ret = 0;
     for (char** st = cmd->argv + 1; *st; st++)
         if (hashmap_contains(aliases, *st))
-            printf("%s is an alias for %s\n", *st, hashmap_get(aliases, *st));
+            dprintf(fdout, "%s is an alias for %s\n", *st, hashmap_get(aliases, *st));
         else if (is_builtin(*st))
-            printf("%s is a mpsh builtin\n", *st);
+            dprintf(fdout, "%s is a mpsh builtin\n", *st);
         else {
             char* path = find_cmd(*st);
             if (path){
-                printf("%s\n", path);
+                dprintf(fdout, "%s\n", path);
                 free(path);
             } else {
                 ret = 1;
-                printf("%s not found\n", *st);
+                dprintf(fderr, "%s not found\n", *st);
             }
         }
-
 
     return ret;
 }
@@ -211,24 +211,25 @@ unsigned char builtin_type (cmd_s* cmd){
  * Bonus builtin : which (because of PATH / CHEMIN)
  * (almost the same as type)
  */
-unsigned char builtin_which (cmd_s* cmd){
+
+unsigned char builtin_which (cmd_s* cmd, int fdin, int fdout, int fderr){
     if (!cmd || !cmd->argv || !cmd->argv[0] || !cmd->argv[1])
         return 1;
 
     unsigned char ret = 0;
     for (char** st = cmd->argv + 1; *st; st++)
         if (hashmap_contains(aliases, *st))
-            printf("%s: aliased to %s\n", *st, hashmap_get(aliases, *st));
+            dprintf(fdout, "%s: aliased to %s\n", *st, hashmap_get(aliases, *st));
         else if (is_builtin(*st))
-            printf("%s: mpsh builtin command\n", *st);
+            dprintf(fdout, "%s: mpsh builtin command\n", *st);
         else {
             char* path = find_cmd(*st);
             if (path){
-                printf("%s\n", path);
+                dprintf(fdout, "%s\n", path);
                 free(path);
             } else {
                 ret = 1;
-                printf("%s not found\n", *st);
+                dprintf(fderr, "%s not found\n", *st);
             }
         }
 
@@ -238,7 +239,7 @@ unsigned char builtin_which (cmd_s* cmd){
 /**
  * umask mode : met en place un masque pour les droits
  */
-unsigned char builtin_umask (cmd_s* cmd){
+unsigned char builtin_umask (cmd_s* cmd, int fdin, int fdout, int fderr){
     return 0;
 }
 
@@ -267,16 +268,16 @@ static short is_number (char *c) {
  * - avec un argument `-n` entier négatif,
  *   fixe à `n` le nombre de commandes enregistrées dans l'historique.
  */
-unsigned char builtin_history (cmd_s* cmd) {
+unsigned char builtin_history (cmd_s* cmd, int fdin, int fdout, int fderr) {
     if (cmd->argv[1]) {
         if (!is_number(cmd->argv[1])) {
-            fprintf (stderr, "not a number\n");
+            dprintf (fderr, "not a number\n");
             return 1;
         }
 
         int n = atoi(cmd->argv[1]);
         if (n > history_length || n == 0) {
-            fprintf(stderr, "invalid argument %d\n", n);
+            dprintf(fderr, "invalid argument %d\n", n);
             return 1;
         }
 
@@ -291,7 +292,7 @@ unsigned char builtin_history (cmd_s* cmd) {
 
     int margin = log_10(history_length);
     for (int i = 1; i < history_length; i++)
-        printf("%*d %s\n", margin, i, history_get(i + history_base)->line);
+        dprintf(fdout, "  %*d %s\n", margin, i, history_get(i + history_base)->line);
     return 0;
 }
 
@@ -301,7 +302,7 @@ char* builtin_names [] = {"cd", "echo", "alias",
                           "type", "umask", "history",
                           "which", NULL};
 
-typedef unsigned char (*builtin)(cmd_s*);
+typedef unsigned char (*builtin)(cmd_s*, int fdin, int fdout, int fderr);
 
 builtin builtin_functions[] = {builtin_cd, builtin_echo, builtin_alias,
                                builtin_exit, builtin_export, builtin_unalias,
@@ -316,10 +317,10 @@ short is_builtin (char* s){
     return 0;
 }
 
-unsigned char exec_builtin(cmd_s* cmd){
+unsigned char exec_builtin(cmd_s* cmd, int fdin, int fdout, int fderr){
     for (int i = 0; builtin_names[i]; i++)
         if (strcmp(cmd->argv[0], builtin_names[i]) == 0)
-            return (*(builtin_functions[i]))(cmd);
+            return (*(builtin_functions[i]))(cmd, fdin, fdout, fderr);
 
     return 1;
 }

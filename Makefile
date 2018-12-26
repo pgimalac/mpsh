@@ -27,7 +27,8 @@ DEPNAME = $(FILES_YF_FP) $(OBJ)
 CC = gcc
 LEX = flex
 YACC = bison
-FLAGS = -Wall -Wno-unused-function -Wextra -g $(foreach d, $(ALL_FOLDERS), -I $(d))
+FLAGS = -Wall -Wno-unused-parameter -Wno-unused-function \
+		-Wextra -g $(foreach d, $(ALL_FOLDERS), -I $(d))
 
 all: $(NAME)
 

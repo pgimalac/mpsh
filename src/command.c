@@ -21,54 +21,48 @@
 
 extern hashmap_t* aliases;
 
-void exec_simple_redir (struct simple_redir *red) {
-    red++;
+#define REGISTER_TABLE_SIZE 3
+
+void exec_simple_redir (struct simple_redir *red, int fds[REGISTER_TABLE_SIZE]) {
+    switch (red->type) {
+    case REDIR_ERRWRITE:
+        fds[red->fd1] = red->fd2;
+        break;
+    default:
+        break;
+    }
 }
 
-void exec_file_redir (struct file_redir *red) {
+void exec_file_redir (struct file_redir *red, int fds[REGISTER_TABLE_SIZE]) {
     // TODO: change open permissions
-    int fd = open(red->fname, O_RDWR|O_TRUNC|O_CREAT, 0644);
+    int fd = open(red->fname, O_RDWR|O_CREAT, 0644);
     if (fd == -1) {
         perror("mpsh: can't create file");
         return;
     }
 
-    int fdold, fdnew;
-
-    printf("%d\n", red->type);
     switch (red->type) {
     case REDIR_WRITE:
-        fdold = 1;
-        fdnew = fd;
+        fds[red->fd] = fd;
         break;
     case REDIR_APP:
         lseek(fd, 0, SEEK_END);
-        fdold = 1;
-        fdnew = fd;
-        break;
-    case REDIR_ERRWRITE:
-        fdold = red->fd;
-        fdnew = fd;
+        fds[1] = fd;
         break;
     case REDIR_READ:
-        fdold = 0;
-        fdnew = fd;
+        fds[0] = fd;
         break;
     default:
-        fdold = 1;
-        fdnew = fd;
-    }
-
-    if (dup2(fdnew, fdold) == -1) {
-        perror("mpsh: cant redirect streams");
+        break;
     }
 }
 
-void exec_redirections (struct cmd_s *cmd) {
-    for (list_t *r = cmd->redirs; r; r = r->next) {
+void exec_redirections (list_t *r, int fds[REGISTER_TABLE_SIZE]) {
+    while (r) {
         struct redir *red = (struct redir*)r->val;
-        if (red->is_simple) exec_simple_redir (red->sredir);
-        else exec_file_redir (red->fredir);
+        if (red->is_simple) exec_simple_redir (red->sredir, fds);
+        else exec_file_redir (red->fredir, fds);
+        r = r->next;
     }
 }
 
@@ -111,15 +105,17 @@ static void find_final_alias(cmd_s* cmd){
 
 }
 
-unsigned char exec_simple (struct cmd_s *cmd) {
+unsigned char exec_simple (struct cmd_s *cmd, int fds[REGISTER_TABLE_SIZE]) {
     if (!cmd || !cmd->argv || !cmd->argv[0] || !cmd->argv[0][0])
         return 0;
 
     if (hashmap_contains(aliases, cmd->argv[0]))
         find_final_alias(cmd);
 
-    if (is_builtin(cmd->argv[0]))
-        return exec_builtin(cmd);
+    if (is_builtin(cmd->argv[0])) {
+        exec_redirections(cmd->redirs, fds);
+        return exec_builtin(cmd, fds[0], fds[1], fds[2]);
+    }
 
     char* path = find_cmd(cmd->argv[0]);
 
@@ -130,14 +126,16 @@ unsigned char exec_simple (struct cmd_s *cmd) {
 
     int pid, status;
 
+    exec_redirections (cmd->redirs, fds);
     if ((pid = fork()) == -1) {
-        perror("mpsh");
+        perror("mpsh: Fork error");
         return 1;
     }
 
     if (pid == 0) {
-        // child process
-        exec_redirections (cmd);
+        dup2(fds[0], 0);
+        dup2(fds[1], 1);
+        dup2(fds[2], 2);
         if (execv(path, cmd->argv) == -1) {
             perror("mpsh");
             return 1;
@@ -155,28 +153,42 @@ unsigned char add_variable (struct var_d *var) {
     return 0;
 }
 
-// TODO: dont work
-unsigned char exec_pipe (cmd_t *left, cmd_t *right) {
-    int fds[2], pid;
+unsigned char exec_with_redirections (cmd_t *cmd, int fds[REGISTER_TABLE_SIZE]);
 
-    if (pipe(fds) != 0) {
-        perror("mpsh");
+// TODO: builtins in pipes dont work
+unsigned char exec_pipe (cmd_t *left, cmd_t *right, int fds[REGISTER_TABLE_SIZE]) {
+    int fdpipe[2], pid;
+
+    if (pipe(fdpipe) != 0) {
+        perror("mpsh: Broken pipe");
         return 1;
     }
     if ((pid = fork()) == -1) {
-        perror("mpsh");
+        perror("mpsh: Fork error");
         return 1;
     }
 
     if (pid == 0) {
-        close(fds[0]);
-        dup2(fds[1], 1);
-        return exec_cmd(left);
+        close(fdpipe[0]);
+        fds[1] = fdpipe[1];
+        return exec_with_redirections(left, fds);
     }
 
-    close(fds[1]);
-    dup2(fds[0], 0);
-    return exec_cmd(right);
+    close(fdpipe[1]);
+    fds[0] = fdpipe[0];
+    return exec_with_redirections(right, fds);
+}
+
+unsigned char exec_with_redirections (cmd_t *cmd, int fds[REGISTER_TABLE_SIZE]) {
+    switch(cmd->type) {
+    case SIMPLE:
+        return exec_simple(cmd->cmd_sim, fds);
+    case BIN:
+        // assert it is a pipe
+        return exec_pipe(cmd->cmd_bin->left, cmd->cmd_bin->right, fds);
+    default:
+        return 0;
+    }
 }
 
 unsigned char exec_bin (struct cmd_b *cmd) {
@@ -195,19 +207,24 @@ unsigned char exec_bin (struct cmd_b *cmd) {
     case SEMI:
         exec_cmd(cmd->left);
         return exec_cmd(cmd->right);
-    case PIPE:
-        return exec_pipe(cmd->left, cmd->right);
     default:
         return 0;
     }
 }
 
 unsigned char exec_cmd (cmd_t *cmd) {
+    int fds[REGISTER_TABLE_SIZE] = {-1};
+    fds[0] = 0;
+    fds[1] = 1;
+    fds[2] = 2;
+
     if (!cmd) return 0;
     switch (cmd->type) {
     case SIMPLE:
-        return exec_simple(cmd->cmd_sim);
+        return exec_simple(cmd->cmd_sim, fds);
     case BIN:
+        if (cmd->cmd_bin->type == PIPE)
+            return exec_pipe(cmd->cmd_bin->left, cmd->cmd_bin->right, fds);
         return exec_bin(cmd->cmd_bin);
     case VAR:
         return add_variable(cmd->cmd_var);
@@ -260,7 +277,7 @@ void command_line_handler (char* input) {
     yy_scan_string(input);
     if (yyparse() != 0) return;
 
-    print_cmd(parse_ret);
+//    print_cmd(parse_ret);
     unsigned char ret = exec_cmd(parse_ret);
 
     add_var(strdup("?"), uchar_to_string(ret), 0);
@@ -350,4 +367,3 @@ short is_cmd(char* st){
     free(s);
     return ret;
 }
-
