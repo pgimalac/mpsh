@@ -36,7 +36,7 @@ ident   [^=|&;<>$\\" "]+
 %x STRING
 %%
 
-<*>"$"{var_id} {
+<INITIAL,VAR,IDENT>"$"{var_id} {
     char *value = secure_get_var(yytext + 1);
     value = value ? value : yytext;
     if (YY_START == INITIAL) {
@@ -178,8 +178,9 @@ ident   [^=|&;<>$\\" "]+
 }
 
 <VAR>[^"\n"$;&" "]+ {
-    free(yylval.value);
-    yylval.value = cat(yylval.value, yytext);
+    char *tmp = yylval.value;
+    yylval.value = cat(tmp, yytext);
+    free(tmp);
 }
 
 <VAR>. {

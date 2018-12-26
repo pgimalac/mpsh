@@ -37,40 +37,33 @@ void exit_mpsh(int ret){
 }
 
 int main (void) {
-    char *s;
+    char *s, *invite, *tmp;
 
     init_completion();
     init_readline();
 
     vars = hashmap_init();
     aliases = hashmap_init();
-//    hashmap_add(aliases, strdup("a"), strdup("ls"), 1);
+    //    hashmap_add(aliases, strdup("a"), strdup("ls"), 1);
 
     init_env_variables();
     // hashmap_print (vars);
 
     read_history(0);
+    if ((tmp = get_var("CHEMIN"))) free(tmp);
+    else add_var(strdup("CHEMIN"), strdup("/usr/local/bin:/usr/bin:/bin"), 1);
 
-    // debug
-        char* tmp;
-        if ((tmp = get_var("CHEMIN")))
-            free(tmp);
-        else
-            add_var(strdup("CHEMIN"), strdup("/usr/local/bin:/usr/bin:/bin"), 1);
+    if ((tmp = get_var("INVITE"))) free(tmp);
+    else add_var(strdup("INVITE"), strdup("mpsh> "), 0);
 
-        if ((tmp = get_var("INVITE")))
-            free(tmp);
-        else
-            add_var(strdup("INVITE"), strdup("mpsh> "), 0);
-    // end
-
-    char* invite;
-    while((s = readline ((invite = get_var("INVITE"))))) {
+    invite = get_var("INVITE");
+    while((s = readline (invite))) {
         command_line_handler(s);
         add_history(s);
         write_history(0);
         free(s);
         free(invite);
+        invite = get_var("INVITE");
     }
 
     exit_mpsh(0);
