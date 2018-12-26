@@ -28,7 +28,7 @@ special [.~_\-/]
 alpha   [A-Za-z]
 dig     [0-9]
 escape  \\.
-var_id  {alpha}({alpha}|{dig})*
+var_id  ({alpha}|\?)({alpha}|{dig})*
 ident   ({alpha}|{dig}|{special})+
 
 %x VAR
@@ -37,7 +37,7 @@ ident   ({alpha}|{dig}|{special})+
 %%
 
 <*>"$"{var_id} {
-    char *value = get_var(yytext + 1);
+    char *value = secure_get_var(yytext + 1);
     value = value ? value : yytext;
     if (YY_START == INITIAL) {
         yylval.value = value;
@@ -172,12 +172,13 @@ ident   ({alpha}|{dig}|{special})+
  }
 
 {var_id}"=" {
-    yylval.value = "";
+    yylval.value = strdup("");
     var_name_buf = strndup(yytext, strlen(yytext) - 1);
     BEGIN VAR;
 }
 
-<VAR>[^"\n"$;{special}&" "]+ {
+<VAR>[^"\n"$;{special}&" "]* {
+    free(yylval.value);
     yylval.value = cat(yylval.value, yytext);
 }
 

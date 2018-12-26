@@ -15,6 +15,8 @@
 #include "command.h"
 #include "env.h"
 
+extern char** environ;
+
 hashmap_t *vars;
 hashmap_t *aliases;
 
@@ -23,6 +25,15 @@ int init_readline() {
 
     rl_attempted_completion_function = fileman_completion;
     return 0;
+}
+
+void exit_mpsh(int ret){
+    for (char** st = environ; *st; st++)
+        free(*st);
+    hashmap_destroy(aliases, 1);
+    hashmap_destroy(vars, 1);
+
+    exit(ret);
 }
 
 int main (void) {
@@ -61,5 +72,6 @@ int main (void) {
         free(s);
         free(invite);
     }
-    return 0;
+
+    exit_mpsh(0);
 }
