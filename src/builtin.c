@@ -77,8 +77,8 @@ unsigned char builtin_cd (cmd_s* cmd, int fdin, int fdout, int fderr){
     return 0;
 }
 
-static void print_alias (char* k, char* v){
-    printf("%s=%s\n", k, v);
+static void print_alias (int fdout, char* k, char* v){
+    dprintf(fdout, "%s=%s\n", k, v);
 }
 
 /**
@@ -90,7 +90,7 @@ unsigned char builtin_alias (cmd_s* cmd, int fdin, int fdout, int fderr){
         return 1;
 
     if (!cmd->argv[1]){ // no argument, print all aliases
-        hashmap_iterate(aliases, print_alias);
+        hashmap_iterate(aliases, fdout, print_alias);
         return 0;
     }
 
@@ -111,7 +111,7 @@ unsigned char builtin_alias (cmd_s* cmd, int fdin, int fdout, int fderr){
         if (p == -1){
             tmp = hashmap_get(aliases, *st);
             if (tmp)
-                print_alias(*st, tmp);
+                print_alias(fdout, *st, tmp);
             else
                 ret = 1;
             continue;
@@ -286,10 +286,16 @@ unsigned char builtin_complete(cmd_s* cmd, int fdin, int fdout, int fderr){
     if (!cmd || !cmd->argv || !cmd->argv[0])
         return 1;
 
-    if (!cmd->argv[1] || !cmd->argv[2])
-        return 1;
+    if (!cmd->argv[1]){
+        hashmap_print(compl, fdin);
+        return 0;
+    }
 
-    char* cmd_name = cmd->argv[1];
+    if (!cmd->argv[2]){
+        hashmap_remove(compl, cmd->argv[1], 1);
+        return 0;
+    }
+
     array_t* arr = array_init();
     for (char** st = cmd->argv + 2; *st; st++){
         array_add(arr, *st);
@@ -299,7 +305,8 @@ unsigned char builtin_complete(cmd_s* cmd, int fdin, int fdout, int fderr){
     char** st = array_to_tab(arr);
     char* buff = strappv(st);
 
-    hashmap_add(compl, cmd_name, buff, 1);
+    hashmap_add(compl, strdup(cmd->argv[1]), buff, 1);
+
     return 0;
 }
 
