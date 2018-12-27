@@ -5,6 +5,8 @@
 #include <unistd.h>
 #include <string.h>
 
+#include "utils.h"
+
 #define HASHSET_INITIAL_CAPACITY 16
 #define HASHSET_RATIO_UPPER_LIMIT 0.8
 #define HASHSET_RATIO_LOWER_LIMIT 0.1
@@ -23,15 +25,6 @@ hashset_t* hashset_init(){
         }
     }
     return h;
-}
-
-// djb2 function from http://www.cse.yorku.ca/~oz/hash.html
-static unsigned int hash(char *s) {
-    unsigned int hash = 5381;
-    int c;
-    while ((c = *s++))
-        hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
-    return hash;
 }
 
 static short resize(hashset_t* h, int capacity){

@@ -4,6 +4,7 @@
 
 #include "list.h"
 #include "hashmap.h"
+#include "utils.h"
 
 #define HASHMAP_INITIAL_CAPACITY 128
 #define HASHMAP_RATIO_UPPER_LIMIT 0.8
@@ -22,16 +23,6 @@ static map_elem *elem(char *key, char *value) {
     }
 
     return e;
-}
-
-// djb2 function from http://www.cse.yorku.ca/~oz/hash.html
-// TODO: Factorize code with hashset
-static unsigned int hash(char *s) {
-    unsigned int hash = 5381;
-    int c;
-    while ((c = *s++))
-        hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
-    return hash;
 }
 
 static short resize (hashmap_t *map, int capacity) {
@@ -162,7 +153,7 @@ void hashmap_destroy(hashmap_t *map, short f) {
     free(map);
 }
 
-void hashmap_iterate (hashmap_t *map, void(*f)(char*, char*)){
+void hashmap_iterate (hashmap_t *map, int fd, void(*f)(int, char*, char*)){
     if (!map)
         return;
 
@@ -170,14 +161,14 @@ void hashmap_iterate (hashmap_t *map, void(*f)(char*, char*)){
     for (int i = 0; i < map->capacity; i++)
         for (list_t *l = map->tab[i]; l; l = l->next) {
             e = (map_elem*)l->val;
-            f(e->key, e->value);
+            f(fd, e->key, e->value);
         }
 }
 
-static void map_elem_print (char* k, char* v){
-    printf("%s: %s\n", k, v);
+static void map_elem_print (int fd, char* k, char* v){
+    dprintf(fd, "%s: %s\n", k, v);
 }
 
-void hashmap_print (hashmap_t *map) {
-    hashmap_iterate(map, map_elem_print);
+void hashmap_print (hashmap_t *map, int stdout) {
+    hashmap_iterate(map, stdout, map_elem_print);
 }

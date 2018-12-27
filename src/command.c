@@ -18,6 +18,7 @@
 #include "completion.h"
 #include "env.h"
 #include "list.h"
+#include "utils.h"
 
 extern hashmap_t* aliases;
 
@@ -265,12 +266,6 @@ void print_cmd (cmd_t *cmd) {
     }
 }
 
-static char* uchar_to_string(unsigned char c){
-    char* buff = malloc(sizeof(char) * 4);
-    sprintf(buff, "%d", c);
-    return buff;
-}
-
 void command_line_handler (char* input) {
     if (!input) return;
 
@@ -282,14 +277,6 @@ void command_line_handler (char* input) {
 
     add_var(strdup("?"), uchar_to_string(ret), 0);
     free_cmd_t(parse_ret);
-}
-
-static char* strapp(char* str1, char* str2, char* str3){
-    int l = strlen(str1) + strlen(str2) + strlen(str3) + 1;
-    char* str = malloc(sizeof(char*) * l);
-    if (str)
-        sprintf(str, "%s%s%s", str1, str2, str3);
-    return str;
 }
 
 static char* search_dir(char* st, char* path, short rec){
@@ -306,9 +293,9 @@ static char* search_dir(char* st, char* path, short rec){
             continue;
         else if (entry->d_type == DT_REG) {
             if (!strcmp(st, entry->d_name))
-                ret = strapp(path, "/", st);
+                ret = strappl(path, "/", st, NULL);
         } else if (rec && entry->d_type == DT_DIR)
-            ret = search_dir(st, strapp(path, "/", entry->d_name), rec);
+            ret = search_dir(st, strappl(path, "/", entry->d_name, NULL), rec);
 
     free(path);
     closedir(dir);
@@ -354,7 +341,7 @@ char* find_cmd(char* st){
             }
         }
 
-        buff = search_dir(st, strapp(path, "/", ""), rec);
+        buff = search_dir(st, strappl(path, "/", NULL), rec);
     }
 
     free(var_path);

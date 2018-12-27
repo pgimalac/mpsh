@@ -3,15 +3,17 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <ctype.h>
 #include <readline/history.h>
 
 #include "hashmap.h"
 #include "command.h"
 #include "builtin.h"
 #include "env.h"
+#include "utils.h"
+#include "array.h"
 
 extern hashmap_t *aliases;
+extern hashmap_t *compl;
 extern char** environ;
 extern void exit_mpsh(int);
 
@@ -75,8 +77,8 @@ unsigned char builtin_cd (cmd_s* cmd, int fdin, int fdout, int fderr){
     return 0;
 }
 
-static void print_alias (char* k, char* v){
-    printf("%s=%s\n", k, v);
+static void print_alias (int fdout, char* k, char* v){
+    dprintf(fdout, "%s=%s\n", k, v);
 }
 
 /**
@@ -88,7 +90,7 @@ unsigned char builtin_alias (cmd_s* cmd, int fdin, int fdout, int fderr){
         return 1;
 
     if (!cmd->argv[1]){ // no argument, print all aliases
-        hashmap_iterate(aliases, print_alias);
+        hashmap_iterate(aliases, fdout, print_alias);
         return 0;
     }
 
@@ -109,7 +111,7 @@ unsigned char builtin_alias (cmd_s* cmd, int fdin, int fdout, int fderr){
         if (p == -1){
             tmp = hashmap_get(aliases, *st);
             if (tmp)
-                print_alias(*st, tmp);
+                print_alias(fdout, *st, tmp);
             else
                 ret = 1;
             continue;
@@ -244,23 +246,6 @@ unsigned char builtin_umask (cmd_s* cmd, int fdin, int fdout, int fderr){
     return 0;
 }
 
-static int log_10 (int n) {
-    int l = 0;
-    while (n > 0) {
-        n /= 10;
-        l++;
-    }
-
-    return l;
-}
-
-static short is_number (char *c) {
-    if (!isdigit(*c) && *c != '-') return 0;
-    c++;
-    while (isdigit(*c)) c++;
-    return *c == 0;
-}
-
 /**
  * history [n] :
  * - sans argument, affiche la liste numérotée de l'historique des commandes,
@@ -297,18 +282,45 @@ unsigned char builtin_history (cmd_s* cmd, int fdin, int fdout, int fderr) {
     return 0;
 }
 
+unsigned char builtin_complete(cmd_s* cmd, int fdin, int fdout, int fderr){
+    if (!cmd || !cmd->argv || !cmd->argv[0])
+        return 1;
+
+    if (!cmd->argv[1]){
+        hashmap_print(compl, fdin);
+        return 0;
+    }
+
+    if (!cmd->argv[2]){
+        hashmap_remove(compl, cmd->argv[1], 1);
+        return 0;
+    }
+
+    array_t* arr = array_init();
+    for (char** st = cmd->argv + 2; *st; st++){
+        array_add(arr, *st);
+        array_add(arr, ":");
+    }
+    array_add(arr, NULL);
+    char** st = array_to_tab(arr);
+    char* buff = strappv(st);
+
+    hashmap_add(compl, strdup(cmd->argv[1]), buff, 1);
+
+    return 0;
+}
 
 char* builtin_names [] = {"cd", "echo", "alias",
                           "exit", "export", "unalias",
                           "type", "umask", "history",
-                          "which", NULL};
+                          "which", "complete", NULL};
 
 typedef unsigned char (*builtin)(cmd_s*, int fdin, int fdout, int fderr);
 
 builtin builtin_functions[] = {builtin_cd, builtin_echo, builtin_alias,
                                builtin_exit, builtin_export, builtin_unalias,
                                builtin_type, builtin_umask, builtin_history,
-                               builtin_which, NULL};
+                               builtin_which, builtin_complete, NULL};
 
 short is_builtin (char* s){
     for (int i = 0; builtin_names[i]; i++)

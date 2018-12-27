@@ -43,11 +43,11 @@ void hashmap_destroy(hashmap_t*, short);
 /**
  * print all key value couple store in the map
  */
-void hashmap_print(hashmap_t *);
+void hashmap_print(hashmap_t*, int);
 
 /**
  * iterate all the key/value of the map in an undefined order
  */
-void hashmap_iterate(hashmap_t*, void(*)(char*, char*));
+void hashmap_iterate(hashmap_t*, int, void(*)(int, char*, char*));
 
 #endif

@@ -15,6 +15,7 @@
 #include "env.h"
 
 extern hashmap_t* vars;
+extern hashmap_t* compl;
 
 static char **completions;
 static int nb_completions;
@@ -105,11 +106,13 @@ char *command_generator (const char *com, int num){
 }
 
 char ** fileman_completion (const char *com, int start, int end) {
-    char **matches;
-    matches = NULL;
+    char **matches = NULL;
 
     if (start == 0)
         matches = rl_completion_matches (com, command_generator);
+    else {
+
+    }
 
     return matches;
 }

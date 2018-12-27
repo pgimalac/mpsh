@@ -19,12 +19,20 @@ extern char** environ;
 
 hashmap_t *vars;
 hashmap_t *aliases;
+hashmap_t *compl;
 
-int init_readline() {
+void init_mpsh() {
+    init_completion();
     rl_readline_name = "mpsh";
 
     rl_attempted_completion_function = fileman_completion;
-    return 0;
+
+    vars = hashmap_init();
+    aliases = hashmap_init();
+    compl = hashmap_init();
+    init_env_variables();
+
+    read_history(0);
 }
 
 void exit_mpsh(int ret){
@@ -32,29 +40,20 @@ void exit_mpsh(int ret){
         free(*st);
     hashmap_destroy(aliases, 1);
     hashmap_destroy(vars, 1);
+    hashmap_destroy(compl, 1);
 
     exit(ret);
 }
 
 int main (void) {
     char *s, *invite, *tmp;
-
-    init_completion();
-    init_readline();
-
-    vars = hashmap_init();
-    aliases = hashmap_init();
-    //    hashmap_add(aliases, strdup("a"), strdup("ls"), 1);
-
-    init_env_variables();
-    // hashmap_print (vars);
-
-    read_history(0);
-    if ((tmp = get_var("CHEMIN"))) free(tmp);
-    else add_var(strdup("CHEMIN"), strdup("/usr/local/bin:/usr/bin:/bin"), 1);
+    init_mpsh();
 
     if ((tmp = get_var("INVITE"))) free(tmp);
     else add_var(strdup("INVITE"), strdup("mpsh> "), 0);
+
+    if ((tmp = get_var("CHEMIN"))) free(tmp);
+    else add_var(strdup("CHEMIN"), strdup(getenv("PATH")), 0);
 
     invite = get_var("INVITE");
     while((s = readline (invite))) {
