@@ -4,6 +4,7 @@
 
 #include "list.h"
 #include "hashmap.h"
+#include "utils.h"
 
 #define HASHMAP_INITIAL_CAPACITY 128
 #define HASHMAP_RATIO_UPPER_LIMIT 0.8
@@ -22,16 +23,6 @@ static map_elem *elem(char *key, char *value) {
     }
 
     return e;
-}
-
-// djb2 function from http://www.cse.yorku.ca/~oz/hash.html
-// TODO: Factorize code with hashset
-static unsigned int hash(char *s) {
-    unsigned int hash = 5381;
-    int c;
-    while ((c = *s++))
-        hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
-    return hash;
 }
 
 static short resize (hashmap_t *map, int capacity) {

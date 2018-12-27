@@ -6,16 +6,7 @@
 #include "parsing.h"
 #include "parser.h"
 #include "env.h"
-
-    static char *cat(char *str1, char *str2) {
-        char *buf = malloc(strlen(str1) + strlen(str2) + 1);
-        if (buf) {
-            strcpy(buf, str1);
-            strcat(buf, str2);
-        }
-
-        return buf;
-    }
+#include "utils.h"
 
     extern hashmap_t *vars;
     extern void yyerror(char *s);
@@ -43,7 +34,7 @@ ident   ({alpha}|{dig}|{special})+
         yylval.value = value;
         BEGIN IDENT;
     } else {
-        yylval.value = cat(yylval.value, value);
+        yylval.value = strappl(yylval.value, value, NULL);
     }
 }
 
@@ -53,7 +44,7 @@ ident   ({alpha}|{dig}|{special})+
     return TOK_IDENT;
 }
 <STRING>[^\"] {
-    yylval.value = cat(yylval.value, yytext);
+    yylval.value = strappl(yylval.value, yytext, NULL);
 }
 <STRING><<EOF>> {
     BEGIN INITIAL;
@@ -153,11 +144,11 @@ ident   ({alpha}|{dig}|{special})+
 }
 
 <IDENT>{ident} {
-    yylval.value = cat(yylval.value, yytext);
+    yylval.value = strappl(yylval.value, yytext, NULL);
 }
 
 <IDENT>\\. {
-    yylval.value = cat(yylval.value, yytext + 1);
+    yylval.value = strappl(yylval.value, yytext + 1, NULL);
  }
 
 <IDENT>. {
@@ -179,7 +170,7 @@ ident   ({alpha}|{dig}|{special})+
 
 <VAR>[^"\n"$;{special}&" "]* {
     free(yylval.value);
-    yylval.value = cat(yylval.value, yytext);
+    yylval.value = strappl(yylval.value, yytext, NULL);
 }
 
 <VAR>. {
