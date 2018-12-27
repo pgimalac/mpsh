@@ -5,6 +5,7 @@
 %{
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "list.h"
 #include "parsing.h"
@@ -40,7 +41,7 @@
 %left <simple> SIMPLE_REDIR
 %token SEMICOLON
 %token ERROR
-%token EOF
+%token EQ
 
 %type <cmd> input
 %type <cmd> cmd cmd_simple
@@ -87,6 +88,19 @@ redir:
 
 args:
   IDENT      { $$ = list_init($1, 0); }
+| VAR   {
+    char *s = malloc(strlen($1->name) + 2);
+    sprintf(s, "%s=%s", $1->name, $1->value);
+    $$ = list_init(s, 0);
+    free($1);
+  }
+| VAR args {
+    char *s = malloc(strlen($1->name) + strlen($1->value) + 2);
+    sprintf(s, "%s=%s", $1->name, $1->value);
+    list_add(&$2, s);
+    free($1);
+    $$ = $2;
+  }
 | IDENT args {
     list_add(&$2, $1);
     $$ = $2;

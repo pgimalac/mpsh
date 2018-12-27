@@ -19,7 +19,6 @@
 
     extern hashmap_t *vars;
     extern void yyerror(char *s);
-
     static char *var_name_buf;
 %}
 
@@ -29,7 +28,7 @@ alpha   [A-Za-z]
 dig     [0-9]
 escape  \\.
 var_id  ({alpha}|\?)({alpha}|{dig})*
-ident   [^=|&;<>$\\" "]+
+ident   [^<>|&;$\\" "=]+
 
 %x VAR
 %x IDENT
@@ -147,6 +146,29 @@ ident   [^=|&;<>$\\" "]+
     return TOK_SEMICOLON;
 }
 
+<INITIAL>{var_id}"=" {
+    yylval.value = strdup("");
+    var_name_buf = strndup(yytext, strlen(yytext) - 1);
+    BEGIN VAR;
+}
+
+<VAR>[^"\n"$;&" "]+ {
+    char *tmp = yylval.value;
+    yylval.value = cat(tmp, yytext);
+}
+
+<VAR>. {
+    yylval.var = create_var_d(var_name_buf, yylval.value);
+    BEGIN INITIAL;
+    return TOK_VAR;
+ }
+
+<VAR><<EOF>> {
+    yylval.var = create_var_d(var_name_buf, yylval.value);
+    BEGIN INITIAL;
+    return TOK_VAR;
+}
+
 <INITIAL>{ident} {
     yylval.value = strdup(yytext);
     BEGIN IDENT;
@@ -169,30 +191,6 @@ ident   [^=|&;<>$\\" "]+
 <IDENT><<EOF>> {
     BEGIN INITIAL;
     return TOK_IDENT;
- }
-
-{var_id}"=" {
-    yylval.value = strdup("");
-    var_name_buf = strndup(yytext, strlen(yytext) - 1);
-    BEGIN VAR;
-}
-
-<VAR>[^"\n"$;&" "]+ {
-    char *tmp = yylval.value;
-    yylval.value = cat(tmp, yytext);
-    free(tmp);
-}
-
-<VAR>. {
-    yylval.var = create_var_d(var_name_buf, yylval.value);
-    BEGIN INITIAL;
-    return TOK_VAR;
- }
-
-<VAR><<EOF>> {
-    yylval.var = create_var_d(var_name_buf, yylval.value);
-    BEGIN INITIAL;
-    return TOK_VAR;
  }
 
 . {

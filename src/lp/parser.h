@@ -56,7 +56,7 @@ extern int yydebug;
     TOK_SIMPLE_REDIR = 263,
     TOK_SEMICOLON = 264,
     TOK_ERROR = 265,
-    TOK_EOF = 266
+    TOK_EQ = 266
   };
 #endif
 
@@ -65,7 +65,7 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 20 "src/lp/parser.y" /* yacc.c:1906  */
+#line 21 "src/lp/parser.y" /* yacc.c:1906  */
 
     cmd_t *cmd;
     char *value;
