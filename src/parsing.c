@@ -55,11 +55,12 @@ redir* redir_from_file (file_redir *r) {
     return red;
 }
 
-cmd_s* create_cmd_s (char **argv, list_t *redirs) {
+cmd_s* create_cmd_s (char **argv, list_t *redirs, short bg) {
     cmd_s *f = malloc(sizeof(cmd_s));
     if (f) {
         f->argv = argv;
         f->redirs = redirs;
+        f->bg = bg;
     }
 
     return f;
@@ -140,7 +141,7 @@ void free_cmd_s(cmd_s* c){
     free(c->argv);
     for (list_t* l = c->redirs; l; l = l->next)
         free_redir((redir*)l->val);
-    list_destroy(c->redirs);
+    list_destroy(c->redirs, 1);
     free(c);
 }
 

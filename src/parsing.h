@@ -56,7 +56,7 @@ typedef struct redir {
  */
 typedef struct cmd_s {
     char **argv;
-
+    short bg;
     list_t *redirs;
 } cmd_s;
 
@@ -107,7 +107,7 @@ redir* redir_from_file (file_redir *r);
 
 var_d* create_var_d (char *name, char *value);
 
-cmd_s* create_cmd_s (char **argv, list_t *redirs);
+cmd_s* create_cmd_s (char **argv, list_t *redirs, short bg);
 
 cmd_b* create_cmd_b (bin_op op, cmd_t *left, cmd_t *right);
 

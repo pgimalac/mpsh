@@ -26,7 +26,6 @@ ident   [^<>|&;$\\" "=]+
 
 %x IDENT
 %x STRING
-%option debug
 %%
 
 <INITIAL,IDENT>"~" {
@@ -61,6 +60,9 @@ ident   [^<>|&;$\\" "=]+
 }
 
 {ws} // skip
+"&" return TOK_BG;
+(";"|"\n") return TOK_SEMICOLON;
+"=" return TOK_EQ;
 
 {dig}">&"{dig} {
     int fd1, fd2;
@@ -144,9 +146,6 @@ ident   [^<>|&;$\\" "=]+
     yylval.op = OR;
     return TOK_BINOP;
 }
-
-(";"|"\n") return TOK_SEMICOLON;
-"=" return TOK_EQ;
 
 <INITIAL>{ident} {
     yylval.value = strdup(yytext);

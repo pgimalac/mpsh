@@ -41,7 +41,7 @@
 %left <simple> SIMPLE_REDIR
 %token SEMICOLON
 %token ERROR
-%token EQ
+%token EQ BG
 %token WS
 
 %type <cmd> input
@@ -67,9 +67,13 @@ cmd:
 
 cmd_simple:
 %empty              { $$ = 0; }
+| args redir BG {
+    char **argv = (char**)list_to_tab($1, sizeof(char *));
+    $$ = create_cmd_with_simple(create_cmd_s(argv, $2, 1));
+  }
 | args redir {
     char **argv = (char**)list_to_tab($1, sizeof(char *));
-    $$ = create_cmd_with_simple(create_cmd_s(argv, $2));
+    $$ = create_cmd_with_simple(create_cmd_s(argv, $2, 0));
   }
 ;
 

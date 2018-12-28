@@ -1,3 +1,4 @@
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -47,6 +48,12 @@ void exit_mpsh(int ret){
 
 int main (void) {
     char *s, *invite, *tmp;
+
+    if (signal(SIGCHLD, sigchild_handler) == SIG_ERR) {
+        perror("mpsh: settings sig child handlder");
+        return 1;
+    }
+
     init_mpsh();
 
     if ((tmp = get_var("INVITE"))) free(tmp);
