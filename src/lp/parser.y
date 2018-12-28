@@ -42,6 +42,7 @@
 %token SEMICOLON
 %token ERROR
 %token EQ
+%token WS
 
 %type <cmd> input
 %type <cmd> cmd cmd_simple
@@ -57,11 +58,11 @@ cmd                 { parse_ret = $1; }
 ;
 
 cmd:
-  VAR               { $$ = create_cmd_with_var_def($1); }
+  IDENT EQ IDENT    { $$ = create_cmd_with_var_def(create_var_d($1, $3)); }
 | cmd_simple        { $$ = $1; }
-| cmd PIPE cmd		{ $$ = create_cmd_with_bin_op(create_cmd_b($2, $1, $3)); }
-| cmd BINOP cmd		{ $$ = create_cmd_with_bin_op(create_cmd_b($2, $1, $3)); }
-| cmd SEMICOLON cmd	{ $$ = create_cmd_with_bin_op(create_cmd_b(SEMI, $1, $3)); }
+| cmd PIPE cmd      { $$ = create_cmd_with_bin_op(create_cmd_b($2, $1, $3)); }
+| cmd BINOP cmd     { $$ = create_cmd_with_bin_op(create_cmd_b($2, $1, $3)); }
+| cmd SEMICOLON cmd { $$ = create_cmd_with_bin_op(create_cmd_b(SEMI, $1, $3)); }
 ;
 
 cmd_simple:
@@ -87,19 +88,11 @@ redir:
 ;
 
 args:
-  IDENT      { $$ = list_init($1, 0); }
-| VAR   {
-    char *s = malloc(strlen($1->name) + 2);
-    sprintf(s, "%s=%s", $1->name, $1->value);
+  IDENT          { $$ = list_init($1, 0); }
+| IDENT EQ IDENT {
+    char *s = malloc(strlen($1) + strlen($3) + 2);
+    sprintf(s, "%s=%s", $1, $3);
     $$ = list_init(s, 0);
-    free($1);
-  }
-| VAR args {
-    char *s = malloc(strlen($1->name) + strlen($1->value) + 2);
-    sprintf(s, "%s=%s", $1->name, $1->value);
-    list_add(&$2, s);
-    free($1);
-    $$ = $2;
   }
 | IDENT args {
     list_add(&$2, $1);

@@ -10,7 +10,6 @@
 
     extern hashmap_t *vars;
     extern void yyerror(char *s);
-    static char *var_name_buf;
 %}
 
 ws      [ \t]+
@@ -21,7 +20,6 @@ escape  \\.
 var_id  ({alpha}|\?)({alpha}|{dig})*
 ident   [^<>|&;$\\" "=]+
 
-%x VAR
 %x IDENT
 %x STRING
 %%
@@ -133,32 +131,8 @@ ident   [^<>|&;$\\" "=]+
     return TOK_BINOP;
 }
 
-(";"|"\n") {
-    return TOK_SEMICOLON;
-}
-
-<INITIAL>{var_id}"=" {
-    yylval.value = strdup("");
-    var_name_buf = strndup(yytext, strlen(yytext) - 1);
-    BEGIN VAR;
-}
-
-<VAR>[^"\n"$;&" "]+ {
-    char *tmp = yylval.value;
-    yylval.value = strappl(tmp, yytext, 0);
-}
-
-<VAR>. {
-    yylval.var = create_var_d(var_name_buf, yylval.value);
-    BEGIN INITIAL;
-    return TOK_VAR;
- }
-
-<VAR><<EOF>> {
-    yylval.var = create_var_d(var_name_buf, yylval.value);
-    BEGIN INITIAL;
-    return TOK_VAR;
-}
+(";"|"\n") return TOK_SEMICOLON;
+"=" return TOK_EQ;
 
 <INITIAL>{ident} {
     yylval.value = strdup(yytext);

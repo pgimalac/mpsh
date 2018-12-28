@@ -67,52 +67,7 @@ void exec_redirections (list_t *r, int fds[REGISTER_TABLE_SIZE]) {
     }
 }
 
-static void find_final_alias(cmd_s* cmd){
-    hashset_t* set = hashset_init();
-    list_t *head = list_init(cmd->argv[0], NULL), *tail = head, *iter;
-    for (char** st = cmd->argv; *st; st++){
-        tail->next = list_init(*st, NULL);
-        tail = tail->next;
-    }
-
-    char *st;
-    short s = 1;
-    while(hashmap_contains(aliases, head->val)){
-        st = strdup(hashmap_get(aliases, head->val));
-        if (hashset_contains(set, st)){
-            s = 0;
-            break;
-        }
-
-        hashset_add(set, st);
-        iter = head->next;
-
-        free(head->val);
-        free(head);
-
-        char* tmp = strtok(st, " ");
-        head = list_init(strdup(tmp), iter);
-        while ((tmp = strtok(NULL, " ")))
-            iter = list_init(strdup(tmp), iter)->next;
-        free(st);
-    }
-
-    hashset_destroy(set, 1);
-    if (s){
-        free(cmd->argv);
-        cmd->argv = (char**)list_to_tab(head, sizeof(char*));
-    } else
-        list_destroy(head);
-
-}
-
 unsigned char exec_simple (struct cmd_s *cmd, int fds[REGISTER_TABLE_SIZE]) {
-    if (!cmd || !cmd->argv || !cmd->argv[0] || !cmd->argv[0][0])
-        return 0;
-
-    if (hashmap_contains(aliases, cmd->argv[0]))
-        find_final_alias(cmd);
-
     if (is_builtin(cmd->argv[0])) {
         exec_redirections(cmd->redirs, fds);
         return exec_builtin(cmd, fds[0], fds[1], fds[2]);
@@ -272,7 +227,7 @@ void command_line_handler (char* input) {
     yy_scan_string(input);
     if (yyparse() != 0) return;
 
-    // print_cmd(parse_ret);
+    print_cmd(parse_ret);
     unsigned char ret = exec_cmd(parse_ret);
 
     add_var(strdup("?"), uchar_to_string(ret), 0);
