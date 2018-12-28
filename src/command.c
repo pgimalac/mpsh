@@ -221,7 +221,7 @@ void print_cmd (cmd_t *cmd) {
     }
 }
 
-void command_line_handler (char* input) {
+void command_line_handler (char *input) {
     if (!input) return;
 
     yy_scan_string(input);

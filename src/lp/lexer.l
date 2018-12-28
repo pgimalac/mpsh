@@ -8,8 +8,10 @@
 #include "env.h"
 #include "utils.h"
 
-    extern hashmap_t *vars;
+    extern hashmap_t *vars, *aliases;
     extern void yyerror(char *s);
+    int alias_depth = 0, alias_done = 0;
+    YY_BUFFER_STATE buffer_stack[100];
 %}
 
 ws      [ \t]+
@@ -24,7 +26,7 @@ ident   [^<>|&;$\\" "=]+
 %x STRING
 %%
 
-<INITIAL,VAR,IDENT>"$"{var_id} {
+<INITIAL,IDENT>"$"{var_id} {
     char *value = secure_get_var(yytext + 1);
     value = value ? value : yytext;
     if (YY_START == INITIAL) {
@@ -149,13 +151,51 @@ ident   [^<>|&;$\\" "=]+
 
 <IDENT>. {
     yyless(0);
-    BEGIN INITIAL;
-    return TOK_IDENT;
+    if (alias_done) {
+        BEGIN INITIAL;
+        return TOK_IDENT;
+    }
+
+    char *alias = hashmap_get(aliases, yylval.value);
+    if (alias) {
+        buffer_stack[alias_depth++] = YY_CURRENT_BUFFER;
+        yy_switch_to_buffer(yy_scan_string(strdup(alias)));
+        BEGIN INITIAL;
+    } else {
+        alias_done = 1;
+        BEGIN INITIAL;
+        return TOK_IDENT;
+    }
 }
 
 <IDENT><<EOF>> {
-    BEGIN INITIAL;
-    return TOK_IDENT;
+    if (alias_done) {
+        BEGIN INITIAL;
+        return TOK_IDENT;
+    }
+
+    char *alias = hashmap_get(aliases, yylval.value);
+    if (alias) {
+        buffer_stack[alias_depth++] = YY_CURRENT_BUFFER;
+        yy_switch_to_buffer(yy_scan_string(strdup(alias)));
+        BEGIN INITIAL;
+    } else {
+        alias_done = 1;
+        BEGIN INITIAL;
+        return TOK_IDENT;
+    }
+}
+
+
+<<EOF>> {
+    if (alias_depth > 0) {
+        alias_done = 1;
+        yy_delete_buffer(YY_CURRENT_BUFFER);
+        yy_switch_to_buffer(buffer_stack[--alias_depth]);
+    } else {
+        alias_done = 0;
+        yyterminate();
+    }
 }
 
 . {
