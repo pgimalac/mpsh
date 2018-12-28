@@ -26,7 +26,14 @@ ident   [^<>|&;$\\" "=]+
 
 %x IDENT
 %x STRING
+%option debug
 %%
+
+<INITIAL,IDENT>"~" {
+    yylval.value = strdup(secure_get_var("HOME"));
+    BEGIN INITIAL;
+    return TOK_IDENT;
+}
 
 <INITIAL,IDENT>"$"{var_id} {
     char *value = secure_get_var(yytext + 1);
