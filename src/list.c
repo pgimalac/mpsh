@@ -66,9 +66,10 @@ int list_size(list_t* l){
     return i;
 }
 
-void list_destroy(list_t* l){
+void list_destroy(list_t* l, short f){
     if (l != NULL){
-        list_destroy(l->next);
+        list_destroy(l->next, f);
+        if (f) free(l->val);
         free(l);
     }
 }

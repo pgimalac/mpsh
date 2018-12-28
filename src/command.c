@@ -227,7 +227,7 @@ void command_line_handler (char *input) {
     yy_scan_string(input);
     if (yyparse() != 0) return;
 
-    print_cmd(parse_ret);
+    // print_cmd(parse_ret);
     unsigned char ret = exec_cmd(parse_ret);
 
     add_var(strdup("?"), uchar_to_string(ret), 0);

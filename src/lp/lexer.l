@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "hashset.h"
 #include "hashmap.h"
 #include "parsing.h"
 #include "parser.h"
@@ -12,6 +13,7 @@
     extern void yyerror(char *s);
     int alias_depth = 0, alias_done = 0;
     YY_BUFFER_STATE buffer_stack[100];
+    hashset_t *used;
 %}
 
 ws      [ \t]+
@@ -119,16 +121,19 @@ ident   [^<>|&;$\\" "=]+
 }
 
 "|" {
+    alias_done = 0;
     yylval.op = PIPE;
     return TOK_PIPE;
 }
 
 "&&" {
+    alias_done = 0;
     yylval.op = AND;
     return TOK_BINOP;
 }
 
 "||" {
+    alias_done = 0;
     yylval.op = OR;
     return TOK_BINOP;
 }
@@ -156,8 +161,15 @@ ident   [^<>|&;$\\" "=]+
         return TOK_IDENT;
     }
 
+    if (!used) used = hashset_init();
+    else if (hashset_contains(used, yylval.value)) {
+        BEGIN INITIAL;
+        return TOK_IDENT;
+    }
+
     char *alias = hashmap_get(aliases, yylval.value);
     if (alias) {
+        hashset_add(used, strdup(alias));
         buffer_stack[alias_depth++] = YY_CURRENT_BUFFER;
         yy_switch_to_buffer(yy_scan_string(strdup(alias)));
         BEGIN INITIAL;
@@ -174,8 +186,15 @@ ident   [^<>|&;$\\" "=]+
         return TOK_IDENT;
     }
 
+    if (!used) used = hashset_init();
+    else if (hashset_contains(used, yylval.value)) {
+        BEGIN INITIAL;
+        return TOK_IDENT;
+    }
+
     char *alias = hashmap_get(aliases, yylval.value);
     if (alias) {
+        hashset_add(used, strdup(alias));
         buffer_stack[alias_depth++] = YY_CURRENT_BUFFER;
         yy_switch_to_buffer(yy_scan_string(strdup(alias)));
         BEGIN INITIAL;
@@ -194,6 +213,8 @@ ident   [^<>|&;$\\" "=]+
         yy_switch_to_buffer(buffer_stack[--alias_depth]);
     } else {
         alias_done = 0;
+        hashset_destroy(used, 1);
+        used = 0;
         yyterminate();
     }
 }

@@ -39,7 +39,7 @@ int list_size(list_t*);
 /**
  * Free all memory used by the list
  */
-void list_destroy(list_t*);
+void list_destroy(list_t*, short free);
 
 /**
  * Removes the first element of the list and returns it

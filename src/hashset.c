@@ -34,7 +34,7 @@ static short resize(hashset_t* h, int capacity){
     for (int i = 0; i < capacity; i++)
         t[i] = NULL;
 
-    for (int i = 0; i < h->capacity; list_destroy(h->tab[i]), i++)
+    for (int i = 0; i < h->capacity; list_destroy(h->tab[i], 0), i++)
         for (list_t* l = h->tab[i]; l != NULL; l = l->next)
             list_add(&t[hash((char *)l->val) % capacity], l->val);
 
@@ -101,9 +101,7 @@ void hashset_destroy(hashset_t* h, short f){
     if (h == 0) return;
 
     for (int i = 0; i < h->capacity; i++)
-        for (list_t* l = h->tab[i]; l; free(list_pop(&l)))
-            if (f)
-                free(l->val);
+        list_destroy(h->tab[i], f);
     free(h->tab);
     free(h);
 }
