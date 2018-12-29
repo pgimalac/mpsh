@@ -4,6 +4,7 @@
 
 #include "env.h"
 #include "hashmap.h"
+#include "utils.h"
 
 extern char **environ;
 extern hashmap_t* vars;
@@ -14,16 +15,13 @@ static char* env_var (char* k, char* v){
     return str;
 }
 
-/**
- * Return the value of the variable k. Obtained with malloc.
- */
 char* get_var (char* k){
     if (!k)
         return NULL;
 
     char* ret;
     if ((ret = getenv(k)) || (ret = hashmap_get(vars, k)))
-        return strdup(ret);
+        return replace_macros(ret);
     return NULL;
 }
 
@@ -34,13 +32,6 @@ char* secure_get_var(char* k){
     return strdup("");
 }
 
-/**
- * Takes a key, a value, a short
- * Both the key and the value must be free-able and not touched after given to this function
- * If the short is 0, then the variable is added as what it was (or local variable if it wasn't set)
- * If the short is 1, the variable is added as an environnement variable (possibly removed from local variables)
- * If the value is NULL, then it is replaced with either the former value (if the variable already exists) or the empty string
- */
 void add_var (char* k, char* v, short env){
     if (!k)
         return;
@@ -66,6 +57,6 @@ void add_var (char* k, char* v, short env){
 }
 
 void init_env_variables() {
-    for (char** envp = environ; *envp; envp ++)
+    for (char** envp = environ; *envp; envp++)
         *envp = strdup(*envp);
 }

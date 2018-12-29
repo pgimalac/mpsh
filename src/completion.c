@@ -107,7 +107,7 @@ static char *command_generator (const char *com, int num){
 }
 
 char** matches = NULL;
-static char* command = NULL;
+char* command = NULL;
 
 int find_files_with_ext(char** str){
     if (!str)

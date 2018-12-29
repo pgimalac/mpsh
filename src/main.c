@@ -19,10 +19,15 @@
 
 extern char** environ;
 extern char** matches;
+extern char* command;
 
 hashmap_t *vars;
 hashmap_t *aliases;
 hashmap_t *compl;
+
+void handle_mpshrc(){
+    // will be done soon
+}
 
 void init_mpsh() {
     init_completion();
@@ -37,6 +42,8 @@ void init_mpsh() {
     init_env_variables();
 
     read_history(0);
+
+    handle_mpshrc();
 }
 
 void exit_mpsh(int ret){
@@ -48,6 +55,8 @@ void exit_mpsh(int ret){
         free(matches);
     }
 
+    free(command);
+
     hashmap_destroy(aliases, 1);
     hashmap_destroy(vars, 1);
     hashmap_destroy(compl, 1);
@@ -56,33 +65,23 @@ void exit_mpsh(int ret){
 }
 
 int main (void) {
-    char *s, *invite, *tmp;
+    char *s, *invite;
 
     if (signal(SIGCHLD, sigchild_handler) == SIG_ERR) {
-        perror("mpsh: settings sig child handlder");
+        perror("mpsh: settings sig child handler");
         return 1;
     }
 
     init_mpsh();
 
-    if ((tmp = get_var("INVITE"))) free(tmp);
-    else add_var(strdup("INVITE"), strdup("[\\u@\\h : \\w]$ "), 0);
-
-    if ((tmp = get_var("CHEMIN"))) free(tmp);
-    else add_var(strdup("CHEMIN"), strdup(getenv("PATH")), 0);
-
-    s = get_var("INVITE");
-    invite = replace_macros(s);
-    free(s);
-    while((s = readline (invite))) {
-        command_line_handler(s);
-        add_history(s);
-        write_history(0);
+    while((s = readline ((invite = get_var("INVITE"))))) {
+        if (s[0]){
+            command_line_handler(s);
+            add_history(s);
+            write_history(0);
+        }
         free(s);
         free(invite);
-        s = get_var("INVITE");
-        invite = replace_macros(s);
-        free(s);
     }
 
     exit_mpsh(0);

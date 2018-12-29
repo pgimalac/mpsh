@@ -23,27 +23,52 @@ int log_10 (int);
 
 /*
  * Returns if the given string is a number
+ * Return the concatenation of given strings
+ * the list of arguments must be NULL-teminated
+ */
+char *strappl(char*, ...);
+
+/**
+ * Return the concatenation of given strings
+ * the list of arguments must be NULL-teminated
+ */
+char *strappv(char**);
+
+/**
+ * Return the number of characters needed to print
+ * the given number in base 10
+ */
+int log_10 (int);
+
+/**
+ * Test if the given string is an integer
  */
 short is_number (char*);
 
 /**
- * Returns a hash for the given string
+ * Hash function on NULL-terminated strings
  */
 unsigned int hash(char*);
-
-/**
- * Converts an unsigned char into a string
- */
-char* uchar_to_string(unsigned char);
 
 /**
  * Replaces the macros in a string
  * The returned string is obtained with malloc.
  */
+char *uchar_to_string(unsigned char);
+
+/**
+ * Replace macros in the given string
+ * - \u print the username
+ * - \h print the hostname
+ * - \w print the full path to the current directory
+ * - \W print the current directory
+ * - \t print the current time H:m:s
+ */
 char *replace_macros(char *str);
 
 /**
- * Returns a pointer to the end of the last appearance of any of the patterns in the string.
+ * Returns a pointer to the end of the last appearance
+ * of any of the patterns in the string.
  * The pattern list must be NULL terminated.
  */
 char* find_last_str(char*, char**);
