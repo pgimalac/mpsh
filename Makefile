@@ -40,6 +40,7 @@ gen:
 	@echo "Generating parser"
 	@$(YACC) -d src/lp/parser.y -o src/lp/parser.c
 	@echo "Parser generated in src/lp/parser.c"
+	@echo "Start compiling objects"
 	@echo "Compiling lexer"
 	@$(CC) $(FLAGS) -c src/lp/lexer.c -o src/lp/lexer.o $(LDLIBS) $(LDLIBS_OBJ)
 	@echo "Compiling parser"
@@ -53,10 +54,11 @@ $(NAME): $(DEPNAME)
 	@echo "Build excutable $(NAME)"
 	@$(CC) $(FLAGS) $(OBJ) -o $(NAME) $(LDLIBS)
 	@echo "Done."
+	@cat ico
 
 clean:
 	@echo "Clean objects"
-	rm -rf $(OBJ) $(FILES_LP_FP)
+	@rm -rf $(OBJ) $(FILES_LP_FP)
 
 fclean: clean
 	@echo "Clean executable $(NAME)"
