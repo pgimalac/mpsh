@@ -15,6 +15,7 @@
 #include "lp/parser.h"
 #include "command.h"
 #include "env.h"
+#include "utils.h"
 
 extern char** environ;
 
@@ -57,19 +58,23 @@ int main (void) {
     init_mpsh();
 
     if ((tmp = get_var("INVITE"))) free(tmp);
-    else add_var(strdup("INVITE"), strdup("mpsh> "), 0);
+    else add_var(strdup("INVITE"), strdup("[\\u@\\h \\W]$ "), 0);
 
     if ((tmp = get_var("CHEMIN"))) free(tmp);
     else add_var(strdup("CHEMIN"), strdup(getenv("PATH")), 0);
 
-    invite = get_var("INVITE");
+    s = get_var("INVITE");
+    invite = replace_macros(s);
+    free(s);
     while((s = readline (invite))) {
         command_line_handler(s);
         add_history(s);
         write_history(0);
         free(s);
         free(invite);
-        invite = get_var("INVITE");
+        s = get_var("INVITE");
+        invite = replace_macros(s);
+        free(s);
     }
 
     exit_mpsh(0);

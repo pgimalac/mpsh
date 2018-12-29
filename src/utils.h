@@ -9,5 +9,6 @@ int log_10 (int);
 short is_number (char*);
 unsigned int hash(char*);
 char *uchar_to_string(unsigned char);
+char *replace_macros(char *str);
 
 #endif

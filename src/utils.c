@@ -2,6 +2,9 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <stdio.h>
+#include <pwd.h>
+#include <time.h>
+#include <sys/types.h>
 
 #include "utils.h"
 #include "list.h"
@@ -101,4 +104,53 @@ char* uchar_to_string(unsigned char c){
     char* buff = malloc(sizeof(char) * 4);
     sprintf(buff, "%d", c);
     return buff;
+}
+
+char *get_dir_from_path(char *path) {
+    char *dir;
+    for (char *tok = strtok(path, "/"); tok; tok = strtok(0, "/"))
+        dir = tok;
+    return dir;
+}
+
+char *replace_macros(char *str) {
+    char c, tmp[256], *tmpp;
+    char *buf = calloc(2048, 1);
+    time_t t;
+    struct tm tm;
+    struct passwd ps;
+
+    while ((c = *str++)) {
+        if (c == '\\') {
+            switch (*str++) {
+            case 'u':
+                ps = *getpwuid(geteuid());
+                buf = strncat(buf, strdup(ps.pw_name), 1024);
+                break;
+            case 'h':
+                gethostname(tmp, 256);
+                buf = strncat(buf, tmp, 1024);
+                break;
+            case 'w':
+                getcwd(tmp, 256);
+                buf = strncat(buf, tmp, 1024);
+                break;
+            case 'W':
+                getcwd(tmp, 256);
+                tmpp = get_dir_from_path(tmp);
+                buf = strncat(buf, tmpp, 1024);
+                break;
+            case 't':
+                t = time(0);
+                tm = *localtime(&t);
+                sprintf(tmp, "%d:%d:%d", tm.tm_hour, tm.tm_min, tm.tm_sec);
+                buf = strncat(buf, tmp, 1024);
+                break;
+            default: buf[strlen(buf)] = c;
+            }
+        }
+        else buf[strlen(buf)] = c;
+    }
+
+    return buf;
 }
