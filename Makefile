@@ -40,9 +40,9 @@ gen:
 	@echo "Generating parser"
 	@$(YACC) -d src/lp/parser.y -o src/lp/parser.c
 	@echo "Parser generated in src/lp/parser.c"
-	@echo "Compiling lexer"
+	@echo "Compiling src/lp/lexer.c"
 	@$(CC) $(FLAGS) -c src/lp/lexer.c -o src/lp/lexer.o $(LDLIBS) $(LDLIBS_OBJ)
-	@echo "Compiling parser"
+	@echo "Compiling src/lp/parser.c"
 	@$(CC) $(FLAGS) -c src/lp/parser.c -o src/lp/parser.o $(LDLIBS) $(LDLIBS_OBJ)
 
 %.o: %.c

@@ -4,6 +4,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <readline/history.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <sys/wait.h>
 
 #include "hashmap.h"
 #include "command.h"
@@ -287,17 +290,99 @@ unsigned char builtin_complete(cmd_s* cmd, int fdin, int fdout, int fderr){
     return 0;
 }
 
+struct proc_header {
+    int pid;
+    char *name;
+    char state;
+};
+
+struct proc_header *make_proc_header(int pid) {
+    int fd;
+    char *path, err[1024], buf[250];
+    struct proc_header *hdr;
+
+    path = malloc(11 + log_10(pid));
+    sprintf(path, "/proc/%d/stat", pid);
+    if ((fd = open(path, O_RDONLY)) == -1) {
+        sprintf(err, "mpsh: can't read process %s", path);
+        perror(err);
+        return 0;
+    }
+
+    if(read(fd, buf, 250) == -1) {
+        sprintf(err, "mpsh: error while reading %s", path);
+        perror(err);
+        return 0;
+    }
+
+    if((hdr = malloc(sizeof(struct proc_header))) != 0) {
+        if (sscanf(buf, "%d (%[^)]) %c", &hdr->pid, hdr->name, &hdr->state) == -1) {
+            perror("error while scan\n");
+            return 0;
+        }
+    }
+
+    return hdr;
+}
+
+void print_job(int i, int *pid) {
+    struct proc_header *ps = make_proc_header(*pid);
+    if (!ps) return;
+    printf("[%d] %d %c %s\n", i + 1, ps->pid, ps->state, ps->name);
+}
+
+unsigned char builtin_fg(cmd_s *cmd, int fdin, int fdout, int fderr) {
+    int *pid, index;
+    int *status = 0;
+
+    if (cmd->argv[1]) {
+        if (is_number(cmd->argv[1])) {
+            index = list_size(bgps) - atoi(cmd->argv[1]);
+            pid = list_remove(&bgps, index);
+        } else {
+            dprintf(fderr, "fg: %s is not a number\n", cmd->argv[1]);
+            return 1;
+        }
+    } else {
+        pid = list_pop(&bgps);
+        index = list_size(bgps);
+    }
+
+    if (pid == 0) {
+        if (cmd->argv[1]) dprintf(fderr, "fg: jobs not found: %s\n", cmd->argv[1]);
+        else dprintf(fderr, "fg: no current jobs\n");
+        return 1;
+    }
+
+    print_job(index, pid);
+    if(waitpid(*pid, status, 0) == -1) {
+        perror("wait error");
+        return 1;
+    }
+    if (status == 0) return 1;
+    return (unsigned char)*status;
+}
+
+unsigned char builtin_jobs(cmd_s *cmd, int fdin, int fdout, int fderr) {
+    list_t *r = list_rev(bgps);
+    list_iteri(r, (void(*)(int,void*))print_job);
+    list_destroy(r, 0);
+    return 0;
+}
+
 char* builtin_names [] = {"cd", "echo", "alias",
                           "exit", "export", "unalias",
                           "type", "umask", "history",
-                          "which", "complete", NULL};
+                          "which", "complete", "fg", "jobs",
+                          NULL};
 
 typedef unsigned char (*builtin)(cmd_s*, int fdin, int fdout, int fderr);
 
 builtin builtin_functions[] = {builtin_cd, builtin_echo, builtin_alias,
                                builtin_exit, builtin_export, builtin_unalias,
                                builtin_type, builtin_umask, builtin_history,
-                               builtin_which, builtin_complete, NULL};
+                               builtin_which, builtin_complete, builtin_fg, builtin_jobs,
+                               NULL};
 
 short is_builtin (char* s){
     for (int i = 0; builtin_names[i]; i++)

@@ -8,6 +8,7 @@ extern int yy_scan_string(const char *);
 extern cmd_t *parse_ret;
 extern hashmap_t *vars;
 
+list_t *bgps;
 void sigchild_handler(int);
 
 void print_cmd (cmd_t*);

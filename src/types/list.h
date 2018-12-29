@@ -23,7 +23,7 @@ short list_add(list_t**, void*);
  * Remove the given index of the list
  * Return if it succeeded
  */
-short list_remove(list_t**, int);
+void *list_remove(list_t**, int);
 
 short list_filter(list_t **l, int(*pred)(void*));
 
@@ -43,6 +43,11 @@ int list_size(list_t*);
  */
 void list_destroy(list_t*, short free);
 
+void list_iter(list_t*, void(*f)(void*));
+
+void list_iteri(list_t*, void(*f)(int, void*));
+
+list_t *list_rev(list_t*);
 /**
  * Removes the first element of the list and returns it
  */
