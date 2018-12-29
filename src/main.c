@@ -16,6 +16,7 @@
 #include "env.h"
 
 extern char** environ;
+extern char** matches;
 
 hashmap_t *vars;
 hashmap_t *aliases;
@@ -26,6 +27,7 @@ void init_mpsh() {
     rl_readline_name = "mpsh";
 
     rl_attempted_completion_function = fileman_completion;
+    rl_ignore_some_completions_function = find_files_with_ext;
 
     vars = hashmap_init();
     aliases = hashmap_init();
@@ -38,6 +40,12 @@ void init_mpsh() {
 void exit_mpsh(int ret){
     for (char** st = environ; *st; st++)
         free(*st);
+    if (matches){
+        for (char** st = matches; *st; st++)
+            free(*st);
+        free(matches);
+    }
+
     hashmap_destroy(aliases, 1);
     hashmap_destroy(vars, 1);
     hashmap_destroy(compl, 1);

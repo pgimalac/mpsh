@@ -102,3 +102,44 @@ char* uchar_to_string(unsigned char c){
     sprintf(buff, "%d", c);
     return buff;
 }
+
+int max (int a, int b){
+    return a > b ? a : b;
+}
+
+char* strrev(char* str){
+    if (!str) return NULL;
+
+    int len = strlen(str);
+    char* s = malloc(sizeof(char) * (len + 1));
+    for (int i = 1; i <= len; i++)
+        s[i - 1] = str[len - i];
+    s[len] = '\0';
+
+    return s;
+}
+
+static char* min(char* a, char* b){
+    return a < b ? a : b;
+}
+
+char* find_last_str(char* str, char** patterns){
+    int len = strlen(str);
+    char *rev = strrev(str), *minimum = rev + len, *pattern, *tmp;
+
+    while (*patterns){
+        pattern = strrev(*patterns++);
+        tmp = strstr(rev, pattern);
+        if (tmp)
+            minimum = min(minimum, tmp);
+        free(pattern);
+    }
+
+    if (minimum == rev + len)
+        tmp = NULL;
+    else
+        tmp = str + len - (minimum - rev);
+
+    free(rev);
+    return tmp;
+}

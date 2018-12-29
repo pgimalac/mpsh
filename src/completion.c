@@ -13,6 +13,7 @@
 #include "completion.h"
 #include "hashmap.h"
 #include "env.h"
+#include "utils.h"
 
 extern hashmap_t* vars;
 extern hashmap_t* compl;
@@ -20,7 +21,7 @@ extern hashmap_t* compl;
 static char **completions;
 static int nb_completions;
 
-int fill_with_dir (char *path, array_t *array) {
+static int fill_with_dir (char *path, array_t *array) {
     char *buf;
     struct dirent *entry;
     struct stat stat_buf;
@@ -86,7 +87,7 @@ void init_completion () {
     completions = array_to_tab(completions_array);
 }
 
-char *command_generator (const char *com, int num){
+static char *command_generator (const char *com, int num){
     static int indice, len;
     char *completion;
 
@@ -105,14 +106,83 @@ char *command_generator (const char *com, int num){
     return NULL;
 }
 
+char** matches = NULL;
+static char* command = NULL;
+
+int find_files_with_ext(char** str){
+    if (!str)
+        return 0;
+    if (!command)
+        return 0;
+
+    char* filter = hashmap_get(compl, command), *filter_cpy;
+
+    if (!filter)
+        return 0;
+
+    short string_boolean, pattern_boolean;
+    int index = 1, length_string, length_pattern, i;
+    for (char** string = str + 1; *string; string++){
+        length_string = strlen(*string);
+        string_boolean = (*string)[length_string - 1] == '/';
+        filter_cpy = strdup(filter);
+        for (char* pattern = strtok(filter_cpy, ":"); !string_boolean && pattern; pattern = strtok(NULL, ":")){
+            length_pattern = strlen(pattern);
+            if (length_pattern < length_string){
+                for (i = 1, pattern_boolean = 1; pattern_boolean && i <= length_pattern; i++)
+                    pattern_boolean &= pattern[length_pattern - i] == (*string)[length_string - i];
+                if (pattern_boolean) pattern_boolean = (*string)[length_string - i] == '.';
+                string_boolean |= pattern_boolean;
+            }
+        }
+        free(filter_cpy);
+        if (string_boolean)
+            str[index++] = *string;
+        else
+            free(*string);
+    }
+    str[index] = NULL;
+    return 0;
+}
+
+
+static char* find_command(char* str){
+    char* separators[] = {"&", "||", ";", ">", "<", NULL}, *tmp;
+
+    char* s = find_last_str(str, separators);
+    if (!s)
+        s = str;
+    else
+        s = strpbrk(s, " ");
+    if (!s) return NULL;
+
+    s += strspn(s, " ");
+    if (!*s) return NULL;
+
+    int l = strchr(s, ' ') - s;
+    tmp = malloc(sizeof(char) * (l + 1));
+    strncpy(tmp, s, l);
+    tmp[l] = '\0';
+    return tmp;
+}
+
 char ** fileman_completion (const char *com, int start, int end) {
-    char **matches = NULL;
+    if (matches){
+        for (char** st = matches; *st; st++)
+            free(*st);
+        free(matches);
+    }
+
+    char* st = strdup(rl_line_buffer);
+    st[end + 1] = '\0';
+    free(command);
+    command = find_command(st);
+    free(st);
 
     if (start == 0)
         matches = rl_completion_matches (com, command_generator);
-    else {
-
-    }
+    else
+        matches = NULL;
 
     return matches;
 }
