@@ -2,16 +2,18 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "hashset.h"
 #include "hashmap.h"
 #include "parsing.h"
 #include "parser.h"
 #include "env.h"
 #include "utils.h"
 
-    extern hashmap_t *vars;
+    extern hashmap_t *vars, *aliases;
     extern void yyerror(char *s);
-
-    static char *var_name_buf;
+    int alias_depth = 0, alias_done = 0;
+    YY_BUFFER_STATE buffer_stack[100];
+    hashset_t *used;
 %}
 
 ws      [ \t]+
@@ -20,14 +22,19 @@ alpha   [A-Za-z]
 dig     [0-9]
 escape  \\.
 var_id  ({alpha}|\?)({alpha}|{dig})*
-ident   ({alpha}|{dig}|{special})+
+ident   [^<>|&;$\\" "=]+
 
-%x VAR
 %x IDENT
 %x STRING
 %%
 
-<*>"$"{var_id} {
+<INITIAL,IDENT>"~" {
+    yylval.value = strdup(secure_get_var("HOME"));
+    BEGIN INITIAL;
+    return TOK_IDENT;
+}
+
+<INITIAL,IDENT>"$"{var_id} {
     char *value = secure_get_var(yytext + 1);
     value = value ? value : yytext;
     if (YY_START == INITIAL) {
@@ -53,6 +60,9 @@ ident   ({alpha}|{dig}|{special})+
 }
 
 {ws} // skip
+"&" return TOK_BG;
+(";"|"\n") return TOK_SEMICOLON;
+"=" return TOK_EQ;
 
 {dig}">&"{dig} {
     int fd1, fd2;
@@ -120,22 +130,21 @@ ident   ({alpha}|{dig}|{special})+
 }
 
 "|" {
+    alias_done = 0;
     yylval.op = PIPE;
     return TOK_PIPE;
 }
 
 "&&" {
+    alias_done = 0;
     yylval.op = AND;
     return TOK_BINOP;
 }
 
 "||" {
+    alias_done = 0;
     yylval.op = OR;
     return TOK_BINOP;
-}
-
-(";"|"\n") {
-    return TOK_SEMICOLON;
 }
 
 <INITIAL>{ident} {
@@ -153,37 +162,68 @@ ident   ({alpha}|{dig}|{special})+
 
 <IDENT>. {
     yyless(0);
-    BEGIN INITIAL;
-    return TOK_IDENT;
+    if (alias_done) {
+        BEGIN INITIAL;
+        return TOK_IDENT;
+    }
+
+    if (!used) used = hashset_init();
+    else if (hashset_contains(used, yylval.value)) {
+        BEGIN INITIAL;
+        return TOK_IDENT;
+    }
+
+    char *alias = hashmap_get(aliases, yylval.value);
+    if (alias) {
+        hashset_add(used, strdup(alias));
+        buffer_stack[alias_depth++] = YY_CURRENT_BUFFER;
+        yy_switch_to_buffer(yy_scan_string(strdup(alias)));
+        BEGIN INITIAL;
+    } else {
+        alias_done = 1;
+        BEGIN INITIAL;
+        return TOK_IDENT;
+    }
 }
 
 <IDENT><<EOF>> {
-    BEGIN INITIAL;
-    return TOK_IDENT;
- }
+    if (alias_done) {
+        BEGIN INITIAL;
+        return TOK_IDENT;
+    }
 
-{var_id}"=" {
-    yylval.value = strdup("");
-    var_name_buf = strndup(yytext, strlen(yytext) - 1);
-    BEGIN VAR;
+    if (!used) used = hashset_init();
+    else if (hashset_contains(used, yylval.value)) {
+        BEGIN INITIAL;
+        return TOK_IDENT;
+    }
+
+    char *alias = hashmap_get(aliases, yylval.value);
+    if (alias) {
+        hashset_add(used, strdup(alias));
+        buffer_stack[alias_depth++] = YY_CURRENT_BUFFER;
+        yy_switch_to_buffer(yy_scan_string(strdup(alias)));
+        BEGIN INITIAL;
+    } else {
+        alias_done = 1;
+        BEGIN INITIAL;
+        return TOK_IDENT;
+    }
 }
 
-<VAR>[^"\n"$;{special}&" "]* {
-    free(yylval.value);
-    yylval.value = strappl(yylval.value, yytext, NULL);
+
+<<EOF>> {
+    if (alias_depth > 0) {
+        alias_done = 1;
+        yy_delete_buffer(YY_CURRENT_BUFFER);
+        yy_switch_to_buffer(buffer_stack[--alias_depth]);
+    } else {
+        alias_done = 0;
+        hashset_destroy(used, 1);
+        used = 0;
+        yyterminate();
+    }
 }
-
-<VAR>. {
-    yylval.var = create_var_d(var_name_buf, yylval.value);
-    BEGIN INITIAL;
-    return TOK_VAR;
- }
-
-<VAR><<EOF>> {
-    yylval.var = create_var_d(var_name_buf, yylval.value);
-    BEGIN INITIAL;
-    return TOK_VAR;
- }
 
 . {
     fprintf(stderr, "mpsh: unexpected character %s\n", yytext);

@@ -56,7 +56,9 @@ extern int yydebug;
     TOK_SIMPLE_REDIR = 263,
     TOK_SEMICOLON = 264,
     TOK_ERROR = 265,
-    TOK_EOF = 266
+    TOK_EQ = 266,
+    TOK_BG = 267,
+    TOK_WS = 268
   };
 #endif
 
@@ -65,7 +67,7 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 20 "src/lp/parser.y" /* yacc.c:1906  */
+#line 21 "src/lp/parser.y" /* yacc.c:1906  */
 
     cmd_t *cmd;
     char *value;
@@ -80,7 +82,7 @@ union YYSTYPE
     struct redir *red;
     bin_op op;
 
-#line 84 "src/lp/parser.h" /* yacc.c:1906  */
+#line 86 "src/lp/parser.h" /* yacc.c:1906  */
 };
 
 typedef union YYSTYPE YYSTYPE;

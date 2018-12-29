@@ -25,6 +25,8 @@ short list_add(list_t**, void*);
  */
 short list_remove(list_t**, int);
 
+short list_filter(list_t **l, int(*pred)(void*));
+
 /**
  * Change the value of the given index of the list
  * Return if it succeeded

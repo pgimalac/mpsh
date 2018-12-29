@@ -5,6 +5,7 @@
 %{
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "list.h"
 #include "parsing.h"
@@ -40,7 +41,8 @@
 %left <simple> SIMPLE_REDIR
 %token SEMICOLON
 %token ERROR
-%token EOF
+%token EQ BG
+%token WS
 
 %type <cmd> input
 %type <cmd> cmd cmd_simple
@@ -56,18 +58,22 @@ cmd                 { parse_ret = $1; }
 ;
 
 cmd:
-  VAR               { $$ = create_cmd_with_var_def($1); }
+  IDENT EQ IDENT    { $$ = create_cmd_with_var_def(create_var_d($1, $3)); }
 | cmd_simple        { $$ = $1; }
-| cmd PIPE cmd		{ $$ = create_cmd_with_bin_op(create_cmd_b($2, $1, $3)); }
-| cmd BINOP cmd		{ $$ = create_cmd_with_bin_op(create_cmd_b($2, $1, $3)); }
-| cmd SEMICOLON cmd	{ $$ = create_cmd_with_bin_op(create_cmd_b(SEMI, $1, $3)); }
+| cmd PIPE cmd      { $$ = create_cmd_with_bin_op(create_cmd_b($2, $1, $3)); }
+| cmd BINOP cmd     { $$ = create_cmd_with_bin_op(create_cmd_b($2, $1, $3)); }
+| cmd SEMICOLON cmd { $$ = create_cmd_with_bin_op(create_cmd_b(SEMI, $1, $3)); }
 ;
 
 cmd_simple:
 %empty              { $$ = 0; }
+| args redir BG {
+    char **argv = (char**)list_to_tab($1, sizeof(char *));
+    $$ = create_cmd_with_simple(create_cmd_s(argv, $2, 1));
+  }
 | args redir {
     char **argv = (char**)list_to_tab($1, sizeof(char *));
-    $$ = create_cmd_with_simple(create_cmd_s(argv, $2));
+    $$ = create_cmd_with_simple(create_cmd_s(argv, $2, 0));
   }
 ;
 
@@ -86,7 +92,12 @@ redir:
 ;
 
 args:
-  IDENT      { $$ = list_init($1, 0); }
+  IDENT          { $$ = list_init($1, 0); }
+| IDENT EQ IDENT {
+    char *s = malloc(strlen($1) + strlen($3) + 2);
+    sprintf(s, "%s=%s", $1, $3);
+    $$ = list_init(s, 0);
+  }
 | IDENT args {
     list_add(&$2, $1);
     $$ = $2;

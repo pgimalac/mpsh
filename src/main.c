@@ -1,3 +1,4 @@
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -14,6 +15,7 @@
 #include "lp/parser.h"
 #include "command.h"
 #include "env.h"
+#include "utils.h"
 
 extern char** environ;
 extern char** matches;
@@ -54,29 +56,33 @@ void exit_mpsh(int ret){
 }
 
 int main (void) {
-    char *s;
+    char *s, *invite, *tmp;
+
+    if (signal(SIGCHLD, sigchild_handler) == SIG_ERR) {
+        perror("mpsh: settings sig child handlder");
+        return 1;
+    }
+
     init_mpsh();
 
-    // debug
-        char* tmp;
-        if ((tmp = get_var("CHEMIN")))
-            free(tmp);
-        else
-            add_var(strdup("CHEMIN"), strdup("/usr/local/bin:/usr/bin:/bin"), 1);
+    if ((tmp = get_var("INVITE"))) free(tmp);
+    else add_var(strdup("INVITE"), strdup("[\\u@\\h : \\w]$ "), 0);
 
-        if ((tmp = get_var("INVITE")))
-            free(tmp);
-        else
-            add_var(strdup("INVITE"), strdup("mpsh> "), 0);
-    // end
+    if ((tmp = get_var("CHEMIN"))) free(tmp);
+    else add_var(strdup("CHEMIN"), strdup(getenv("PATH")), 0);
 
-    char* invite;
-    while((s = readline ((invite = get_var("INVITE"))))) {
+    s = get_var("INVITE");
+    invite = replace_macros(s);
+    free(s);
+    while((s = readline (invite))) {
         command_line_handler(s);
         add_history(s);
         write_history(0);
         free(s);
         free(invite);
+        s = get_var("INVITE");
+        invite = replace_macros(s);
+        free(s);
     }
 
     exit_mpsh(0);

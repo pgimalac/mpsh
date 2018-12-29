@@ -37,6 +37,21 @@ short list_remove(list_t** l, int i){
     return 1;
 }
 
+short list_filter(list_t **l, int(*pred)(void*)) {
+    if (*l == 0) return 0;
+    int i = 0, k = 0;
+
+    while (*l) {
+        if (pred((*l)->val)) {
+            i = k;
+            *l = (*l)->next ? (*l)->next->next : 0;
+        } else *l = (*l)->next;
+        k++;
+    }
+
+    return i;
+}
+
 void* list_pop(list_t** l){
     void* e = NULL;
     if (l && *l){

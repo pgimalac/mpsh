@@ -86,41 +86,21 @@ static void print_alias (int fdout, char* k, char* v){
  * affiche les alias ou met en place un alias
  */
 unsigned char builtin_alias (cmd_s* cmd, int fdin, int fdout, int fderr){
-    if (!cmd || !cmd->argv || !cmd->argv[0])
-        return 1;
-
     if (!cmd->argv[1]){ // no argument, print all aliases
         hashmap_iterate(aliases, fdout, print_alias);
         return 0;
     }
 
     unsigned char ret = 0;
-    char* tmp;
     for (char** st = cmd->argv + 1; *st; st++){
-        int p = -1;
-        for (int i = 0; (*st)[i]; i++)
-            if ((*st)[p] == '='){
-                p = i;
-                break;
-            }
-
-        if (p == 0){
-            dprintf(fderr, "mpsh: %s not found\n", *st + 1);
-            return 1;
-        }
-        if (p == -1){
-            tmp = hashmap_get(aliases, *st);
-            if (tmp)
-                print_alias(fdout, *st, tmp);
-            else
-                ret = 1;
-            continue;
-        }
-
-        char* k = strndup(*st, p);
-        char* v = strdup(*st + p + 1);
-
-        hashmap_add(aliases, k, v, 1);
+        char *name, *value, *tmp;
+        tmp = strdup(*st);
+        name = strsep(&tmp, "=");
+        if (tmp == 0) {
+            value = hashmap_get(aliases, name);
+            if (value) print_alias(fdout, name, value);
+            else ret = 1;
+        } else hashmap_add(aliases, name, strdup(tmp), 1);
     }
 
     return ret;
@@ -131,9 +111,6 @@ unsigned char builtin_alias (cmd_s* cmd, int fdin, int fdout, int fderr){
  * exporte une variable ( i.e. la transforme en variable d'environnement)
  */
 unsigned char builtin_export (cmd_s* cmd, int fdin, int fdout, int fderr){
-    if (!cmd || !cmd->argv || !cmd->argv[0])
-        return 1;
-
     if (!cmd->argv[1]){
         for (char** st = environ; *st; st++)
             dprintf(fdin, "%s\n", *st);

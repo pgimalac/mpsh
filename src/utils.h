@@ -37,6 +37,12 @@ unsigned int hash(char*);
 char* uchar_to_string(unsigned char);
 
 /**
+ * Replaces the macros in a string
+ * The returned string is obtained with malloc.
+ */
+char *replace_macros(char *str);
+
+/**
  * Returns a pointer to the end of the last appearance of any of the patterns in the string.
  * The pattern list must be NULL terminated.
  */
