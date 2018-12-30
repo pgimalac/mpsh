@@ -1,0 +1,173 @@
+.\" Manpage for mpsh builtins.
+.TH MPSHBUILTINS 1 "General Command Manual"
+.SH NAME
+mpshbuiltins \- description of all mpsh's builtins
+.SH DESCRIPTION
+mpsh is the best shell (at the very least for thoses I know) ever created. He provide a list of builtins \- commands executed directly in the shell \- to improve the user experience. All builtins are described below.
+.SH BUILTINS
+.BI cd
+[
+.I
+target
+]
+
+.RS
+The
+.I cd
+utility shall change the working directory of the current shell execution environment
+.RE
+
+.BI echo
+[
+.I args...
+]
+
+.RS
+Display a line of text
+.RE
+
+.BI alias
+[
+.I var[=name]...
+]
+
+.RS
+.B -
+If no arguments are given print all aliases
+.RE
+.RS
+.B -
+If only
+.I var
+is given, print the associated alias
+.RE
+.RS
+.B -
+If an argument of type
+.I var=name
+is given, associate
+.I var
+to alias
+.I name
+.RE
+
+.B exit
+[
+.I n
+]
+
+.RS
+Exit the shell with
+.I n
+exit code. If
+.I n is not specified exit the last command exit code
+.RE
+
+.B export
+[
+.I var[=name]...
+]
+
+.RS
+The shell shall give the export attribute to the variables corresponding to the specified names, which shall cause them to be in the environment  of subsequently executed commands. If the name of a variable is followed by
+.IR =word,
+then the value of that variable shall be set to word.
+.RE
+
+.B unalias
+[
+.I name
+]
+
+.RS
+Remove the alias for the given
+.I name
+.RE
+
+.B type
+.I name
+[
+.I name...
+]
+
+.RS
+Indicate how each argument would be interpret by the shell
+.RE
+
+.B umask
+[
+.I n
+]
+
+.RS
+Change the umask value.
+.I n
+must be a number written in octal
+.RE
+
+.B history
+[
+.I n
+]
+
+.RS
+.B -
+If no argument is specified, print all commands stored in the history
+.RE
+.RS
+.B -
+If
+.I n
+is a positif integer, execute the
+.I n-ith
+command of the history
+.RE
+.RS
+.B -
+If
+.I n
+is a negative integer only rememeber the last
+.I n-th
+commands
+.RE
+
+.B which
+.I name
+[
+.I name...
+]
+
+.RS
+Print the full path of executable or how they would have been interpreted by the shell otherwise
+.RE
+
+.B complete
+[
+.I name|name ext...
+]
+
+.RS
+.B -
+If no argument is given, print all defined completion
+.RE
+.RS
+.B -
+If only a
+.I name
+is given, remove all completion associated with the given
+.I name
+.RE
+.RS
+.B -
+If a
+.I name
+is given and a list of extentions
+.IR ext,
+adds extensions to the list of extensions for the given name. If a such list is
+.BR unempty,
+the completion will suggets only files of specified extentions for the given
+.I name
+.RE
+
+.SH AUTHORS
+Maxime FLIN and Pierre Gimalac

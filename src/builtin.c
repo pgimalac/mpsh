@@ -20,8 +20,8 @@ extern char** environ;
 extern void exit_mpsh(int);
 
 /**
- * echo $var :
- * affiche la valeur de la variable var
+ * echo [args...] :
+ * Display a line of text
  */
 unsigned char builtin_echo (cmd_s* cmd, int fdin, int fdout, int fderr){
     for (int i = 1; cmd->argv[i]; i++)
@@ -110,7 +110,7 @@ unsigned char builtin_alias (cmd_s* cmd, int fdin, int fdout, int fderr){
 
 /**
  * export var[=word] :
- * exporte une variable ( i.e. la transforme en variable d'environnement)
+ * exporte une variable (i.e. la transforme en variable d'environnement)
  */
 unsigned char builtin_export (cmd_s* cmd, int fdin, int fdout, int fderr){
     if (!cmd->argv[1]){
@@ -141,9 +141,6 @@ unsigned char builtin_export (cmd_s* cmd, int fdin, int fdout, int fderr){
  * unalias name : supprime un alias
  */
 unsigned char builtin_unalias (cmd_s* cmd, int fdin, int fdout, int fderr){
-    if (!cmd || !cmd->argv || !cmd->argv[0])
-        return 1;
-
     if (!cmd->argv[1]){
         dprintf(fderr, "%s\n", "unalias: not enough arguments");
         return 1;
@@ -166,7 +163,7 @@ unsigned char builtin_unalias (cmd_s* cmd, int fdin, int fdout, int fderr){
  */
 
 unsigned char builtin_type (cmd_s* cmd, int fdin, int fdout, int fderr){
-    if (!cmd || !cmd->argv || !cmd->argv[0] || !cmd->argv[1])
+    if (!cmd->argv[1])
         return 1;
 
     unsigned char ret = 0;
@@ -195,7 +192,7 @@ unsigned char builtin_type (cmd_s* cmd, int fdin, int fdout, int fderr){
  */
 
 unsigned char builtin_which (cmd_s* cmd, int fdin, int fdout, int fderr){
-    if (!cmd || !cmd->argv || !cmd->argv[0] || !cmd->argv[1])
+    if (!cmd->argv[1])
         return 1;
 
     unsigned char ret = 0;
@@ -277,9 +274,6 @@ unsigned char builtin_history (cmd_s* cmd, int fdin, int fdout, int fderr) {
 }
 
 unsigned char builtin_complete(cmd_s* cmd, int fdin, int fdout, int fderr){
-    if (!cmd || !cmd->argv || !cmd->argv[0])
-        return 1;
-
     if (!cmd->argv[1]){
         hashmap_print(compl, fdin);
         return 0;
