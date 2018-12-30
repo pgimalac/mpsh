@@ -138,7 +138,15 @@ commands
 ]
 
 .RS
-Print the full path of executable or how they would have been interpreted by the shell otherwise
+Print the full path of executable or how they would have been interpreted by the shell otherwise.
+.B mpsh
+use the environnement variable
+.B CHEMIN
+instead of
+.BR PATH.
+This is the reason why
+.B which
+is a builtin
 .RE
 
 .B complete
