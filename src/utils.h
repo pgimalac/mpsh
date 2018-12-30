@@ -21,7 +21,7 @@ char* strappv(char**);
  */
 int log_10 (int);
 
-/*
+/**
  * Returns if the given string is a number
  * Return the concatenation of given strings
  * the list of arguments must be NULL-teminated
@@ -39,6 +39,11 @@ char *strappv(char**);
  * the given number in base 10
  */
 int log_10 (int);
+
+/**
+ * Test if the given string is a positive integer
+ */
+short is_positive_number (char*);
 
 /**
  * Test if the given string is an integer

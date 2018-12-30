@@ -84,6 +84,11 @@ int log_10 (int n) {
     return l;
 }
 
+short is_positive_number (char *c) {
+    while (isdigit(*c)) c++;
+    return *c == 0;
+}
+
 short is_number (char *c) {
     if (!isdigit(*c) && *c != '-') return 0;
     c++;

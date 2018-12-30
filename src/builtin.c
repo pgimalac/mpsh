@@ -3,6 +3,8 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <readline/history.h>
 
 #include "hashmap.h"
@@ -220,6 +222,21 @@ unsigned char builtin_which (cmd_s* cmd, int fdin, int fdout, int fderr){
  * umask mode : met en place un masque pour les droits
  */
 unsigned char builtin_umask (cmd_s* cmd, int fdin, int fdout, int fderr){
+    mode_t mask;
+
+    if (!cmd->argv[1]) {
+        mask = umask(0);
+        printf("%03o\n", mask);
+        return 0;
+    }
+
+    if (!is_positive_number(cmd->argv[1])) {
+        dprintf(fderr, "umask: bad symbol %s\n", cmd->argv[1]);
+        return 1;
+    }
+
+    mask = strtol(cmd->argv[1], 0, 8);
+    umask(mask);
     return 0;
 }
 
@@ -234,13 +251,13 @@ unsigned char builtin_umask (cmd_s* cmd, int fdin, int fdout, int fderr){
 unsigned char builtin_history (cmd_s* cmd, int fdin, int fdout, int fderr) {
     if (cmd->argv[1]) {
         if (!is_number(cmd->argv[1])) {
-            dprintf (fderr, "not a number\n");
+            dprintf (fderr, "history: not a number\n");
             return 1;
         }
 
         int n = atoi(cmd->argv[1]);
         if (n > history_length || n == 0) {
-            dprintf(fderr, "invalid argument %d\n", n);
+            dprintf(fderr, "history: invalid argument %d\n", n);
             return 1;
         }
 

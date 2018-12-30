@@ -28,6 +28,12 @@ ident   [^<>|&;$\\" "=]+
 %x STRING
 %%
 
+<INITIAL,IDENT>"?" {
+    yylval.value = strdup(secure_get_var("?"));
+    BEGIN INITIAL;
+    return TOK_IDENT;
+}
+
 <INITIAL,IDENT>"~" {
     yylval.value = strdup(secure_get_var("HOME"));
     BEGIN INITIAL;
