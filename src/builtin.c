@@ -3,6 +3,8 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <readline/history.h>
 
 #include "hashmap.h"
@@ -18,8 +20,8 @@ extern char** environ;
 extern void exit_mpsh(int);
 
 /**
- * echo $var :
- * affiche la valeur de la variable var
+ * echo [args...] :
+ * Display a line of text
  */
 unsigned char builtin_echo (cmd_s* cmd, int fdin, int fdout, int fderr){
     for (int i = 1; cmd->argv[i]; i++)
@@ -108,7 +110,7 @@ unsigned char builtin_alias (cmd_s* cmd, int fdin, int fdout, int fderr){
 
 /**
  * export var[=word] :
- * exporte une variable ( i.e. la transforme en variable d'environnement)
+ * exporte une variable (i.e. la transforme en variable d'environnement)
  */
 unsigned char builtin_export (cmd_s* cmd, int fdin, int fdout, int fderr){
     if (!cmd->argv[1]){
@@ -134,9 +136,6 @@ unsigned char builtin_export (cmd_s* cmd, int fdin, int fdout, int fderr){
  * unalias name : supprime un alias
  */
 unsigned char builtin_unalias (cmd_s* cmd, int fdin, int fdout, int fderr){
-    if (!cmd || !cmd->argv || !cmd->argv[0])
-        return 1;
-
     if (!cmd->argv[1]){
         dprintf(fderr, "%s\n", "unalias: not enough arguments");
         return 1;
@@ -159,7 +158,7 @@ unsigned char builtin_unalias (cmd_s* cmd, int fdin, int fdout, int fderr){
  */
 
 unsigned char builtin_type (cmd_s* cmd, int fdin, int fdout, int fderr){
-    if (!cmd || !cmd->argv || !cmd->argv[0] || !cmd->argv[1])
+    if (!cmd->argv[1])
         return 1;
 
     unsigned char ret = 0;
@@ -188,7 +187,7 @@ unsigned char builtin_type (cmd_s* cmd, int fdin, int fdout, int fderr){
  */
 
 unsigned char builtin_which (cmd_s* cmd, int fdin, int fdout, int fderr){
-    if (!cmd || !cmd->argv || !cmd->argv[0] || !cmd->argv[1])
+    if (!cmd->argv[1])
         return 1;
 
     unsigned char ret = 0;
@@ -215,6 +214,21 @@ unsigned char builtin_which (cmd_s* cmd, int fdin, int fdout, int fderr){
  * umask mode : met en place un masque pour les droits
  */
 unsigned char builtin_umask (cmd_s* cmd, int fdin, int fdout, int fderr){
+    mode_t mask;
+
+    if (!cmd->argv[1]) {
+        mask = umask(0);
+        printf("%03o\n", mask);
+        return 0;
+    }
+
+    if (!is_positive_number(cmd->argv[1])) {
+        dprintf(fderr, "umask: bad symbol %s\n", cmd->argv[1]);
+        return 1;
+    }
+
+    mask = strtol(cmd->argv[1], 0, 8);
+    umask(mask);
     return 0;
 }
 
@@ -229,13 +243,13 @@ unsigned char builtin_umask (cmd_s* cmd, int fdin, int fdout, int fderr){
 unsigned char builtin_history (cmd_s* cmd, int fdin, int fdout, int fderr) {
     if (cmd->argv[1]) {
         if (!is_number(cmd->argv[1])) {
-            dprintf (fderr, "not a number\n");
+            dprintf (fderr, "history: not a number\n");
             return 1;
         }
 
         int n = atoi(cmd->argv[1]);
         if (n > history_length || n == 0) {
-            dprintf(fderr, "invalid argument %d\n", n);
+            dprintf(fderr, "history: invalid argument %d\n", n);
             return 1;
         }
 
@@ -255,9 +269,6 @@ unsigned char builtin_history (cmd_s* cmd, int fdin, int fdout, int fderr) {
 }
 
 unsigned char builtin_complete(cmd_s* cmd, int fdin, int fdout, int fderr){
-    if (!cmd || !cmd->argv || !cmd->argv[0])
-        return 1;
-
     if (!cmd->argv[1]){
         hashmap_print(compl, fdin);
         return 0;
