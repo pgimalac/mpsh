@@ -3,16 +3,14 @@
 #include <stdlib.h>
 
 #include "env.h"
-#include "hashmap.h"
+#include "types/hashmap.h"
 #include "utils.h"
 
 extern char **environ;
 extern hashmap_t* vars;
 
 static char* env_var (char* k, char* v){
-    char* str = malloc(sizeof(char) * (strlen(k) + strlen(v) + 2));
-    sprintf(str, "%s=%s", k, v);
-    return str;
+    return strappl(k, "=", v, NULL);
 }
 
 char* get_var (char* k){

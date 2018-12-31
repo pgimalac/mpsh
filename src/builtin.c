@@ -7,12 +7,12 @@
 #include <sys/stat.h>
 #include <readline/history.h>
 
-#include "hashmap.h"
+#include "types/hashmap.h"
 #include "command.h"
 #include "builtin.h"
 #include "env.h"
 #include "utils.h"
-#include "array.h"
+#include "types/array.h"
 
 extern hashmap_t *aliases;
 extern hashmap_t *compl;

@@ -5,7 +5,7 @@
 #ifndef H_PARSER
 #define H_PARSER
 
-#include "list.h"
+#include "types/list.h"
 
 /**
  * Representing a variable assignation

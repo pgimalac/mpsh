@@ -11,13 +11,13 @@
 #include <dirent.h>
 
 #include "command.h"
-#include "hashset.h"
+#include "types/hashset.h"
 #include "lp/parser.h"
 #include "builtin.h"
-#include "array.h"
+#include "types/array.h"
 #include "completion.h"
 #include "env.h"
-#include "list.h"
+#include "types/list.h"
 #include "utils.h"
 
 #define REGISTER_TABLE_SIZE 3
@@ -203,14 +203,14 @@ unsigned char exec_bin (struct cmd_b *cmd) {
 unsigned char exec_script(int fd){
     if (fd < 0) return 1;
 
-    struct stat* st = alloca(sizeof(struct stat));
-    if (fstat(fd, st) == -1){
+    struct stat st;
+    if (fstat(fd, &st) == -1){
         perror("mpsh script");
         close(fd);
         return 1;
     }
 
-    if ((st->st_mode & S_IFMT) != S_IFREG){
+    if ((st.st_mode & S_IFMT) != S_IFREG){
         fprintf(stderr, "mpsh script: not a regular file");
         close(fd);
         return 1;
@@ -320,7 +320,6 @@ void command_line_handler (char *input) {
     yy_scan_string(input);
     if (yyparse() != 0) return;
 
-    // print_cmd(parse_ret);
     unsigned char ret = exec_cmd(parse_ret);
 
     add_var(strdup("?"), uchar_to_string(ret), 0);
@@ -354,8 +353,7 @@ char* find_cmd(char* st){
     if (!st)
         return NULL;
 
-    short s = strrchr(st, '/') != NULL;
-    if (s && is_valid_file_path(st))
+    if (strrchr(st, '/') && is_valid_file_path(st))
         return st;
 
     char* var_path = get_var("CHEMIN");
@@ -376,7 +374,7 @@ char* find_cmd(char* st){
             }
         }
 
-        buff = search_dir(st, strappl(path, "/", NULL), rec);
+        buff = search_dir(st, strdup(path), rec);
     }
 
     free(var_path);

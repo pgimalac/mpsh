@@ -200,13 +200,13 @@ char *replace_macros(char *str) {
 }
 
 short is_valid_file_path(char* st){
-    struct stat* s = alloca(sizeof(struct stat));
-    short ret = stat(st, s) == 0 && (s->st_mode & S_IFMT) == S_IFREG;
+    struct stat s;
+    short ret = stat(st, &s) == 0 && (s.st_mode & S_IFMT) == S_IFREG;
     return ret;
 }
 
 short is_valid_dir_path(char* st){
-    struct stat* s = alloca(sizeof(struct stat));
-    short ret = stat(st, s) == 0 && (s->st_mode & S_IFMT) == S_IFDIR;
+    struct stat s;
+    short ret = stat(st, &s) == 0 && (s.st_mode & S_IFMT) == S_IFDIR;
     return ret;
 }

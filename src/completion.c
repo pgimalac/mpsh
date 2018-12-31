@@ -8,71 +8,66 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 
-#include "array.h"
+#include "types/array.h"
 #include "builtin.h"
 #include "completion.h"
-#include "hashmap.h"
+#include "types/hashmap.h"
 #include "env.h"
 #include "utils.h"
 
 extern hashmap_t* vars;
 extern hashmap_t* compl;
 
-static char **completions;
-static int nb_completions;
+char **completions = NULL;
+static int nb_completions = 0;
 
-static int fill_with_dir (char *path, array_t *array) {
-    char *buf;
+static void fill_dir(char* path, short rec, array_t* arr) {
+    DIR* dir = opendir(path);
+    if (!dir) return;
+
+    char* ret = NULL;
     struct dirent *entry;
-    struct stat stat_buf;
-    DIR *dir = opendir(path);
+    while (!ret && (entry = readdir(dir)))
+        if (!strcmp(".", entry->d_name) || !strcmp("..", entry->d_name))
+            continue;
+        else if (entry->d_type == DT_REG)
+            array_add(arr, strdup(entry->d_name));
+        else if (rec && entry->d_type == DT_DIR)
+            fill_dir(strappl(path, "/", entry->d_name, NULL), rec, arr);
 
-    if (!dir) return -1;
-    while ((entry = readdir(dir)))
-        if (entry->d_type == DT_REG) {
-            int s = strlen(path) + strlen(entry->d_name) + 2;
-            buf = malloc(sizeof(char) * s);
-            sprintf(buf, "%s/%s", path, entry->d_name);
+    free(path);
+    closedir(dir);
+}
 
-            if(stat(buf, &stat_buf) == 0 &&
-               stat_buf.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH)) {
+static array_t* get_all_files (char *var_path) {
+    if (!var_path)
+        return NULL;
 
-                buf = malloc(sizeof(char) * 256);
-                strncpy(buf, entry->d_name, 255);
-                array_add(array, buf);
+    array_t* arr = array_init();
+    if (!arr)
+        return NULL;
+
+    int l;
+    short rec = 0;
+    char* buff = NULL;
+
+    for (char* path = strtok(var_path, ":"); path && !buff; path = strtok(NULL, ":")) {
+        l = strlen(path);
+        if (l >= 1 && path[l - 1] == '/'){
+            path[l - 1] = '\0';
+            if (l >= 2 && path[l - 2] == '/'){
+                path[l - 2] = '\0';
+                rec = 1;
             }
         }
 
-    closedir(dir);
-    return 0;
-}
-
-array_t* get_all_files (char *var_path) {
-    char *path, *name, *tmp;
-    char *saveptr1, *saveptr2;
-    struct stat stat_buf;
-
-    array_t *array = array_init();
-
-    for (path = strtok_r(var_path, ":", &saveptr1); path; path = strtok_r(0, ":", &saveptr1)) {
-        if (stat(path, &stat_buf) == 0) {
-            if (S_ISDIR(stat_buf.st_mode)) {
-                if (fill_with_dir(path, array) == -1)
-                    fprintf(stderr, "Can't open directory %s\n", path);
-            } else if (S_ISREG(stat_buf.st_mode) &&
-                       stat_buf.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH)) {
-                for (tmp = strtok_r(path, "/", &saveptr2); tmp; path = 0,
-                         tmp = strtok_r(0, "/", &saveptr2))
-                    name = tmp;
-                array_add(array, name);
-            }
-        } else fprintf(stderr, "Can't open %s\n", path);
+        fill_dir(strdup(path), rec, arr);
     }
 
-    return array;
+    return arr;
 }
 
-void init_completion () {
+static void init_completion () {
     char *path = get_var("CHEMIN");
     if (!path)
         return;
@@ -84,23 +79,29 @@ void init_completion () {
         array_add(completions_array, *c);
 
     nb_completions = completions_array->size;
+/*    if (completions){
+        for (char** st = completions; *st; st++)
+            free(*st);
+        free(completions);
+    } */
     completions = array_to_tab(completions_array);
 }
 
 static char *command_generator (const char *com, int num){
-    static int indice, len;
-    char *completion;
+    static int len;
+    static char** completion;
 
     if (num == 0){
-        indice = 0;
         len = strlen(com);
+        init_completion();
+        completion = completions;
     }
 
-    while (indice < nb_completions) {
-        completion = completions[indice++];
-
-        if (strncmp (completion, com, len) == 0)
-            return strdup(completion);
+    while (*completion){
+        if (strncmp (*completion, com, len) == 0)
+            return strdup(*completion++);
+        else
+            completion++;
     }
 
     return NULL;
@@ -168,18 +169,17 @@ static char* find_command(char* str){
 }
 
 char ** fileman_completion (const char *com, int start, int end) {
-    if (matches){
+/*    if (matches){
         for (char** st = matches; *st; st++)
             free(*st);
         free(matches);
     }
-
+*/
     char* st = strdup(rl_line_buffer);
     st[end + 1] = '\0';
     free(command);
     command = find_command(st);
     free(st);
-
     if (start == 0)
         matches = rl_completion_matches (com, command_generator);
     else

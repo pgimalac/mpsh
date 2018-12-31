@@ -18,8 +18,13 @@
 #include "env.h"
 #include "utils.h"
 
+#define DEFAULT_INVITE "[\\u@\\h : \\w]$ "
+#define DEFAULT_CHEMIN "/usr/bin:/bin"
+#define DEFAULT_MPSHRC "export CHEMIN=$PATH\nINVITE=\"[\\u@\\h : \\w]$ \""
+
 extern char** environ;
 extern char** matches;
+extern char** completions;
 extern char* command;
 
 hashmap_t *vars;
@@ -27,20 +32,19 @@ hashmap_t *aliases;
 hashmap_t *compl;
 
 static int create_mpshrc (char* path) {
+    printf("~/.mpshrc not found.\nCreation of a default .mpshrc\nThe default content is\n\n%s\n\n", DEFAULT_MPSHRC);
     int fd = open (path, O_WRONLY | O_CREAT);
     if (fd == -1){
         perror("mpshrc creation");
         return -1;
     }
 
-    const char* default_mpshrc = "export CHEMIN=$PATH\nINVITE=\"[\\u@\\h : \\w]$ \"";
-
-    if (write(fd, default_mpshrc, strlen(default_mpshrc)) == -1){
+    if (write(fd, DEFAULT_MPSHRC, strlen(DEFAULT_MPSHRC)) == -1){
         perror("mpshrc writing");
         close(fd);
         return -1;
     }
-
+    printf("~/.mpshrc created.\n");
     close(fd);
 
     return open(path, O_RDONLY);
@@ -55,8 +59,13 @@ static void handle_mpshrc(){
     int f = open(path, O_RDONLY);
     if (f == -1 && (f = create_mpshrc(path)) == -1)
         perror("mpshrc");
-    else
-        exec_script(f);
+    else {
+        printf("Execution of the ~/.mpshrc script.\n");
+        if (exec_script(f) == 0)
+            printf("~/.mpshrc successfully executed.\n");
+        else
+            printf("Problem in the execution of ~/.mpshrc.\n");
+    }
 
     close(f);
     free(home);
@@ -64,7 +73,7 @@ static void handle_mpshrc(){
 }
 
 static void init_mpsh() {
-    init_completion();
+//    init_completion();
     rl_readline_name = "mpsh";
 
     rl_attempted_completion_function = fileman_completion;
@@ -84,25 +93,24 @@ static void init_mpsh() {
     tmp = get_var("INVITE");
     if (tmp)
         free(tmp);
-    else
-        add_var(strdup("INVITE"), strdup("[\\u@\\h : \\w]$ "), 0);
+    else {
+        printf("$INVITE set to its default value \"%s\"\n", DEFAULT_INVITE);
+        add_var(strdup("INVITE"), strdup(DEFAULT_INVITE), 0);
+    }
 
     // Default value of CHEMIN
     tmp = get_var("CHEMIN");
     if (tmp)
         free(tmp);
-    else
-        add_var(strdup("CHEMIN"), "/usr/bin:/bin", 1);
+    else {
+        printf("$CHEMIN set to its default value \"%s\"\n", DEFAULT_CHEMIN);
+        add_var(strdup("CHEMIN"), strdup(DEFAULT_CHEMIN), 1);
+    }
 }
 
 void exit_mpsh(int ret){
     for (char** st = environ; *st; st++)
         free(*st);
-    if (matches){
-        for (char** st = matches; *st; st++)
-            free(*st);
-        free(matches);
-    }
 
     free(command);
 
