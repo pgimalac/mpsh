@@ -78,6 +78,21 @@ static void init_mpsh() {
     read_history(0);
 
     handle_mpshrc();
+
+    char* tmp;
+    // Default value of INVITE
+    tmp = get_var("INVITE");
+    if (tmp)
+        free(tmp);
+    else
+        add_var(strdup("INVITE"), strdup("[\\u@\\h : \\w]$ "), 0);
+
+    // Default value of CHEMIN
+    tmp = get_var("CHEMIN");
+    if (tmp)
+        free(tmp);
+    else
+        add_var(strdup("CHEMIN"), "/usr/bin:/bin", 1);
 }
 
 void exit_mpsh(int ret){

@@ -92,6 +92,11 @@ char* strrev(char*);
 /**
  * Returns if the given string is a path to an existing regular file
  */
-short is_valid_path(char*);
+short is_valid_file_path(char*);
+
+/**
+ * Returns if the given string is a path to an existing directory
+ */
+short is_valid_dir_path(char*);
 
 #endif

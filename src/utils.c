@@ -202,9 +202,17 @@ char *replace_macros(char *str) {
     return buf;
 }
 
-short is_valid_path(char* st){
+short is_valid_file_path(char* st){
     struct stat* s = malloc(sizeof(struct stat));
     short ret = stat(st, s) == 0 && (s->st_mode & S_IFMT) == S_IFREG;
+
+    free(s);
+    return ret;
+}
+
+short is_valid_dir_path(char* st){
+    struct stat* s = malloc(sizeof(struct stat));
+    short ret = stat(st, s) == 0 && (s->st_mode & S_IFMT) == S_IFDIR;
 
     free(s);
     return ret;

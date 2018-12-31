@@ -115,7 +115,7 @@ int find_files_with_ext(char** str){
     if (!command)
         return 0;
 
-    char* filter = hashmap_get(compl, command), *filter_cpy;
+    char* filter = hashmap_get(compl, command), *filter_cpy, *tmp;
 
     if (!filter)
         return 0;
@@ -124,7 +124,9 @@ int find_files_with_ext(char** str){
     int index = 1, length_string, length_pattern, i;
     for (char** string = str + 1; *string; string++){
         length_string = strlen(*string);
-        string_boolean = (*string)[length_string - 1] == '/';
+        tmp = strappl("./", *string, NULL);
+        string_boolean = is_valid_dir_path(tmp);
+        free(tmp);
         filter_cpy = strdup(filter);
         for (char* pattern = strtok(filter_cpy, ":"); !string_boolean && pattern; pattern = strtok(NULL, ":")){
             length_pattern = strlen(pattern);

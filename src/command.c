@@ -356,7 +356,7 @@ char* find_cmd(char* st){
         return NULL;
 
     short s = strrchr(st, '/') != NULL;
-    if (s && is_valid_path(st))
+    if (s && is_valid_file_path(st))
         return st;
 
     char* var_path = get_var("CHEMIN");
