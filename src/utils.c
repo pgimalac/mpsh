@@ -5,9 +5,10 @@
 #include <pwd.h>
 #include <time.h>
 #include <sys/types.h>
-
+#include <sys/stat.h>
+#include <unistd.h>
 #include "utils.h"
-#include "list.h"
+#include "types/list.h"
 
 char* strappl(char* str1, ...){
     if (!str1) return NULL;
@@ -194,4 +195,12 @@ char *replace_macros(char *str) {
     }
 
     return buf;
+}
+
+short is_valid_path(char* st){
+    struct stat* s = malloc(sizeof(struct stat));
+    short ret = stat(st, s) == 0 && (s->st_mode & S_IFMT) == S_IFREG;
+
+    free(s);
+    return ret;
 }

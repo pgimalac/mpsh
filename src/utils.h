@@ -84,4 +84,9 @@ int max(int, int);
  */
 char* strrev(char*);
 
+/**
+ * Returns if the given string is a path to an existing regular file
+ */
+short is_valid_path(char*);
+
 #endif

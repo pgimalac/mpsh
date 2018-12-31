@@ -153,10 +153,10 @@ static char* find_command(char* str){
     if (!s)
         s = str;
     else
-        s = strpbrk(s, " ");
+        s = strpbrk(s, " \t");
     if (!s) return NULL;
 
-    s += strspn(s, " ");
+    s += strspn(s, " \t");
     if (!*s) return NULL;
 
     int l = strchr(s, ' ') - s;

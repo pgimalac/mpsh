@@ -117,19 +117,14 @@ unsigned char builtin_export (cmd_s* cmd, int fdin, int fdout, int fderr){
         return 0;
     }
 
-    for (char** st = cmd->argv; *st; st++){
-        short s = -1;
-        for (int i = 0; (*st)[i]; i++)
-            if ((*st)[i] == '='){
-                s = i;
-                break;
-            }
+    for (char** st = cmd->argv + 1; *st; st++){
+        char* tmp = strchr(*st, '=');
 
-        if (s == -1)
-            add_var(*st, NULL, 1);
+        if (tmp == NULL)
+            add_var(strdup(*st), NULL, 1);
         else {
-            (*st)[s] = '\0';
-            add_var(*st, strdup(*st + s + 1), 1);
+            (*st)[tmp - *st] = '\0';
+            add_var(strdup(*st), strdup(tmp + 1), 1);
         }
     }
     return 0;

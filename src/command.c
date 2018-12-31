@@ -200,6 +200,68 @@ unsigned char exec_bin (struct cmd_b *cmd) {
     }
 }
 
+unsigned char exec_script(int fd){
+    if (fd < 0) return 1;
+
+    struct stat* st = malloc(sizeof(struct stat));
+    if (fstat(fd, st) == -1){
+        perror("mpsh script");
+        close(fd);
+        return 1;
+    }
+
+    if ((st->st_mode & S_IFMT) != S_IFREG){
+        fprintf(stderr, "mpsh script: not a regular file");
+        close(fd);
+        return 1;
+    }
+    free(st);
+
+    if (lseek(fd, 0, SEEK_SET) == -1){
+        perror("mpsh script: can't move to the beginning of the file.");
+        close(fd);
+        return 1;
+    }
+
+    FILE* file = fdopen(fd, "r");
+    if (!file){
+        perror("mpshrc script");
+        close(fd);
+        return 1;
+    }
+
+    int buff_size = 256;
+    char *buff = calloc(sizeof(char), buff_size), fc;
+
+    if (!buff){
+        perror("mpsh script");
+        close(fd);
+        return 2;
+    }
+
+    while (fgets(buff, buff_size, file)){
+        while (buff[buff_size - 1] != '\0'){
+            buff = realloc(buff, 2 * buff_size);
+            if (!buff){
+                perror("mpsh script");
+                close(fd);
+                return 2;
+            }
+            buff[2 * buff_size - 1] = '\0';
+            fgets(buff + buff_size, buff_size, file);
+            buff_size *= 2;
+        }
+        fc = *(buff + strspn(buff, " \t"));
+        if (fc != '#' && fc != '\0' && fc != '\n')
+            command_line_handler(buff);
+        buff[buff_size - 1] = '\0';
+    }
+
+    free(buff);
+    close(fd);
+    return 0;
+}
+
 unsigned char exec_cmd (cmd_t *cmd) {
     int fds[REGISTER_TABLE_SIZE] = {-1};
     fds[0] = 0;
@@ -289,24 +351,11 @@ static char* search_dir(char* st, char* path, short rec){
     return ret;
 }
 
-static short is_valid_path(char* st){
-    struct stat* s = malloc(sizeof(struct stat));
-    short ret = stat(st, s) == 0 && s->st_mode & S_IFREG;
-
-    free(s);
-    return ret;
-}
-
 char* find_cmd(char* st){
     if (!st)
         return NULL;
 
-    short s = 0;
-    for (char* tmp = st; *tmp; tmp++)
-        if (*tmp == '/'){
-            s = 1;
-            break;
-        }
+    short s = strrchr(st, '/') != NULL;
     if (s && is_valid_path(st))
         return st;
 

@@ -4,13 +4,14 @@
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
-
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <readline/readline.h>
 #include <readline/history.h>
 
 #include "completion.h"
-#include "array.h"
-#include "hashmap.h"
+#include "types/array.h"
+#include "types/hashmap.h"
 #include "parsing.h"
 #include "lp/parser.h"
 #include "command.h"
@@ -25,11 +26,44 @@ hashmap_t *vars;
 hashmap_t *aliases;
 hashmap_t *compl;
 
-void handle_mpshrc(){
-    // will be done soon
+static int create_mpshrc (char* path) {
+    int fd = open (path, O_WRONLY | O_CREAT);
+    if (fd == -1){
+        perror("mpshrc creation");
+        return -1;
+    }
+
+    const char* default_mpshrc = "export CHEMIN=$PATH\nINVITE=\"[\\u@\\h : \\w]$ \"";
+
+    if (write(fd, default_mpshrc, strlen(default_mpshrc)) == -1){
+        perror("mpshrc writing");
+        close(fd);
+        return -1;
+    }
+
+    close(fd);
+
+    return open(path, O_RDONLY);
 }
 
-void init_mpsh() {
+static void handle_mpshrc(){
+    char* home = get_var("HOME");
+    if (!home) return;
+
+    char* path = strappl(home, "/.mpshrc", NULL);
+
+    int f = open(path, O_RDONLY);
+    if (f == -1 && (f = create_mpshrc(path)) == -1)
+        perror("mpshrc");
+    else
+        exec_script(f);
+
+    close(f);
+    free(home);
+    free(path);
+}
+
+static void init_mpsh() {
     init_completion();
     rl_readline_name = "mpsh";
 
@@ -65,7 +99,7 @@ void exit_mpsh(int ret){
 }
 
 int main (void) {
-    char *s, *invite;
+    char *s, *invite, fc;
 
     if (signal(SIGCHLD, sigchild_handler) == SIG_ERR) {
         perror("mpsh: settings sig child handler");
@@ -73,9 +107,10 @@ int main (void) {
     }
 
     init_mpsh();
-
     while((s = readline ((invite = get_var("INVITE"))))) {
-        if (s[0]){
+        // first char that is neither a space nor a tab
+        fc = *(s + strspn(s, " \t"));
+        if (fc != '#' && fc != '\0' && fc != '\n'){
             command_line_handler(s);
             add_history(s);
             write_history(0);
