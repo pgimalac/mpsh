@@ -16,13 +16,13 @@ char* strappl(char* str1, ...){
     va_list ap;
     va_start(ap, str1);
 
-    int* tmp = malloc(sizeof(int));
+    int* tmp = alloca(sizeof(int));
     *tmp = strlen(str1);
     list_t *head = list_init(tmp, NULL), *tail = head;
     int l = *tmp + 1;
     char* st;
     while ((st = va_arg(ap, char*))){
-        tmp = malloc(sizeof(int));
+        tmp = alloca(sizeof(int));
         *tmp = strlen(st);
         l += *tmp;
         tail->next = list_init(tmp, NULL);
@@ -39,7 +39,6 @@ char* strappl(char* str1, ...){
         l += *(int*)head->val;
         tail = head;
         head = head->next;
-        free(tail->val);
         free(tail);
     } while ((st = va_arg(ap, char*)));
 
@@ -49,13 +48,13 @@ char* strappl(char* str1, ...){
 
 char* strappv(char** str){
     if (!str || !str[0]) return NULL;
-    int *tmp = malloc(sizeof(int));
+    int *tmp = alloca(sizeof(int));
     *tmp = strlen(str[0]);
     int l = *tmp + 1;
     list_t* head = list_init(tmp, NULL), *tail = head;
 
     for(char** st = str + 1; *st; st++){
-        tmp = malloc(sizeof(int));
+        tmp = alloca(sizeof(int));
         *tmp = strlen(*st);
         tail->next = list_init(tmp, NULL);
         tail = tail->next;
@@ -69,7 +68,6 @@ char* strappv(char** str){
         l += *(int*)head->val;
         tail = head;
         head = head->next;
-        free(tail->val);
         free(tail);
     }
     return buff;
@@ -120,10 +118,9 @@ char* strrev(char* str){
     if (!str) return NULL;
 
     int len = strlen(str);
-    char* s = malloc(sizeof(char) * (len + 1));
+    char* s = calloc(len + 1, sizeof(char));
     for (int i = 1; i <= len; i++)
         s[i - 1] = str[len - i];
-    s[len] = '\0';
 
     return s;
 }
@@ -203,17 +200,13 @@ char *replace_macros(char *str) {
 }
 
 short is_valid_file_path(char* st){
-    struct stat* s = malloc(sizeof(struct stat));
+    struct stat* s = alloca(sizeof(struct stat));
     short ret = stat(st, s) == 0 && (s->st_mode & S_IFMT) == S_IFREG;
-
-    free(s);
     return ret;
 }
 
 short is_valid_dir_path(char* st){
-    struct stat* s = malloc(sizeof(struct stat));
+    struct stat* s = alloca(sizeof(struct stat));
     short ret = stat(st, s) == 0 && (s->st_mode & S_IFMT) == S_IFDIR;
-
-    free(s);
     return ret;
 }

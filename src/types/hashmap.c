@@ -27,17 +27,16 @@ static map_elem *elem(char *key, char *value) {
 
 static short resize (hashmap_t *map, int capacity) {
     map_elem *e;
-    list_t **tab = malloc(sizeof(list_t *) * capacity);
+    list_t **tab = calloc(capacity, sizeof(list_t *));
     if (!tab) return 0;
-
-    for (int i = 0; i < capacity; i++)
-        tab[i] = NULL;
 
     for (int i = 0; i < map->capacity; i++)
         for (list_t *l = map->tab[i]; l; ) {
             e = (map_elem*)list_pop(&l);
-            if (!list_add(&tab[hash(e->key) % map->capacity], e))
-            return 0;
+            if (!list_add(&tab[hash(e->key) % map->capacity], e)){
+                free(tab);
+                return 0;
+            }
         }
 
     free(map->tab);
@@ -52,13 +51,10 @@ hashmap_t *hashmap_init() {
         map->size = 0;
         map->capacity = HASHMAP_INITIAL_CAPACITY;
 
-        map->tab = malloc(sizeof(list_t *) * map->capacity);
-        if (map->tab) {
-            for (int i = 0; i < map->capacity; i++)
-            map->tab[i] = 0;
-        } else {
+        map->tab = calloc(map->capacity, sizeof(list_t *));
+        if(!map->tab) {
             free (map);
-            map = 0;
+            map = NULL;
         }
     }
 
@@ -66,7 +62,7 @@ hashmap_t *hashmap_init() {
 }
 
 static map_elem *get (hashmap_t *map, char *key) {
-    if (map == 0) return 0;
+    if (map == NULL) return NULL;
 
     map_elem *e;
     for (list_t *l = map->tab[hash(key) % map->capacity]; l; l = l->next) {
@@ -101,7 +97,7 @@ short hashmap_add(hashmap_t *map, char *key, char *value, short f) {
 
 char *hashmap_get(hashmap_t *map, char *key) {
     struct map_elem *e = get(map, key);
-    return e ? e->value : 0;
+    return e ? e->value : NULL;
 }
 
 static short map_list_remove (list_t **lst, char *key, short f) {

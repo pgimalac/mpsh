@@ -28,7 +28,7 @@ DEPNAME = $(OBJ)
 CC = gcc
 LEX = flex
 YACC = bison
-FLAGS = -Wall -g $(foreach d, $(ALL_FOLDERS), -I $(d))
+FLAGS = -Wall -Wextra -Wno-unused-parameter -g $(foreach d, $(ALL_FOLDERS), -I $(d))
 
 all: gen $(NAME)
 

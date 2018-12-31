@@ -67,7 +67,7 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 21 "src/lp/parser.y" /* yacc.c:1906  */
+#line 22 "src/lp/parser.y" /* yacc.c:1906  */
 
     cmd_t *cmd;
     char *value;

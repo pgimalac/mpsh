@@ -162,9 +162,8 @@ static char* find_command(char* str){
     if (!*s) return NULL;
 
     int l = strchr(s, ' ') - s;
-    tmp = malloc(sizeof(char) * (l + 1));
+    tmp = calloc(l + 1, sizeof(char));
     strncpy(tmp, s, l);
-    tmp[l] = '\0';
     return tmp;
 }
 

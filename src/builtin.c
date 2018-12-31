@@ -98,10 +98,11 @@ unsigned char builtin_alias (cmd_s* cmd, int fdin, int fdout, int fderr){
         char *name, *value, *tmp;
         tmp = strdup(*st);
         name = strsep(&tmp, "=");
-        if (tmp == 0) {
+        if (tmp == NULL) {
             value = hashmap_get(aliases, name);
             if (value) print_alias(fdout, name, value);
             else ret = 1;
+            free(name);
         } else hashmap_add(aliases, name, strdup(tmp), 1);
     }
 

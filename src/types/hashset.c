@@ -16,10 +16,8 @@ hashset_t* hashset_init(){
     if (h){
         h->size = 0;
         h->capacity = HASHSET_INITIAL_CAPACITY;
-        if ((h->tab = malloc(sizeof(list_t*) * h->capacity)))
-            for(int i = 0; i < h->capacity; i++)
-                h->tab[i] = NULL;
-        else {
+        h->tab = calloc(h->capacity, sizeof(list_t*));
+        if (!h->tab){
             free(h);
             h = NULL;
         }
@@ -28,11 +26,8 @@ hashset_t* hashset_init(){
 }
 
 static short resize(hashset_t* h, int capacity){
-    list_t** t = malloc(sizeof(list_t) * capacity);
+    list_t** t = calloc(capacity, sizeof(list_t));
     if (!t) return 0;
-
-    for (int i = 0; i < capacity; i++)
-        t[i] = NULL;
 
     for (int i = 0; i < h->capacity; list_destroy(h->tab[i], 0), i++)
         for (list_t* l = h->tab[i]; l != NULL; l = l->next)

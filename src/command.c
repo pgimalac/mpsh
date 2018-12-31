@@ -203,7 +203,7 @@ unsigned char exec_bin (struct cmd_b *cmd) {
 unsigned char exec_script(int fd){
     if (fd < 0) return 1;
 
-    struct stat* st = malloc(sizeof(struct stat));
+    struct stat* st = alloca(sizeof(struct stat));
     if (fstat(fd, st) == -1){
         perror("mpsh script");
         close(fd);
@@ -215,7 +215,6 @@ unsigned char exec_script(int fd){
         close(fd);
         return 1;
     }
-    free(st);
 
     if (lseek(fd, 0, SEEK_SET) == -1){
         perror("mpsh script: can't move to the beginning of the file.");
@@ -231,7 +230,7 @@ unsigned char exec_script(int fd){
     }
 
     int buff_size = 256;
-    char *buff = calloc(sizeof(char), buff_size), fc;
+    char *buff = calloc(buff_size, sizeof(char)), fc;
 
     if (!buff){
         perror("mpsh script");
