@@ -15,16 +15,21 @@
 #include "env.h"
 #include "utils.h"
 
+#define SEPARATORS (char*[]){"&", "||", ";", ">", "<", NULL}
+
 extern hashmap_t* vars;
 extern hashmap_t* compl;
 
-char **completions = NULL;
-static int nb_completions = 0;
+static char **completions = NULL;
 
 static void fill_dir(char* path, short rec, array_t* arr) {
     DIR* dir = opendir(path);
-    if (!dir) return;
+    if (!dir){
+        free(path);
+        return;
+    }
 
+    array_add(arr, path);
     char* ret = NULL;
     struct dirent *entry;
     while (!ret && (entry = readdir(dir)))
@@ -35,7 +40,6 @@ static void fill_dir(char* path, short rec, array_t* arr) {
         else if (rec && entry->d_type == DT_DIR)
             fill_dir(strappl(path, "/", entry->d_name, NULL), rec, arr);
 
-    free(path);
     closedir(dir);
 }
 
@@ -76,14 +80,9 @@ static void init_completion () {
     free(path);
 
     for (char **c = builtin_names; *c; c++)
-        array_add(completions_array, *c);
+        array_add(completions_array, strdup(*c));
 
-    nb_completions = completions_array->size;
-/*    if (completions){
-        for (char** st = completions; *st; st++)
-            free(*st);
-        free(completions);
-    } */
+    array_add(completions_array, NULL);
     completions = array_to_tab(completions_array);
 }
 
@@ -97,26 +96,27 @@ static char *command_generator (const char *com, int num){
         completion = completions;
     }
 
-    while (*completion){
+    while (*completion)
         if (strncmp (*completion, com, len) == 0)
-            return strdup(*completion++);
+            return *completion++;
         else
-            completion++;
-    }
+            free(*completion++);
 
+    free(completions);
     return NULL;
 }
 
-char** matches = NULL;
-char* command = NULL;
+static int begin_command, end_command;
 
 int find_files_with_ext(char** str){
     if (!str)
         return 0;
-    if (!command)
+    if (begin_command == -1 || end_command == -1)
         return 0;
 
+    char* command = strndup(rl_line_buffer, end_command - begin_command);
     char* filter = hashmap_get(compl, command), *filter_cpy, *tmp;
+    free(command);
 
     if (!filter)
         return 0;
@@ -149,41 +149,31 @@ int find_files_with_ext(char** str){
 }
 
 
-static char* find_command(char* str){
-    char* separators[] = {"&", "||", ";", ">", "<", NULL}, *tmp;
-
-    char* s = find_last_str(str, separators);
+static void find_command(char* str){
+    char* s = find_last_str(str, SEPARATORS);
     if (!s)
         s = str;
     else
         s = strpbrk(s, " \t");
-    if (!s) return NULL;
+    if (!s) return;
 
     s += strspn(s, " \t");
-    if (!*s) return NULL;
 
-    int l = strchr(s, ' ') - s;
-    tmp = calloc(l + 1, sizeof(char));
-    strncpy(tmp, s, l);
-    return tmp;
+    begin_command = s - str;
+    char* tmp = strchr(s, ' ');
+    if (tmp)
+        end_command = tmp - s;
+    else
+        end_command = strlen(str);
 }
 
 char ** fileman_completion (const char *com, int start, int end) {
-/*    if (matches){
-        for (char** st = matches; *st; st++)
-            free(*st);
-        free(matches);
-    }
-*/
-    char* st = strdup(rl_line_buffer);
-    st[end + 1] = '\0';
-    free(command);
-    command = find_command(st);
+    begin_command = end_command = -1;
+    char* st = strndup(rl_line_buffer, end + 1);
+    find_command(st);
     free(st);
-    if (start == 0)
-        matches = rl_completion_matches (com, command_generator);
-    else
-        matches = NULL;
 
-    return matches;
+    if (start == begin_command)
+        return rl_completion_matches (com, command_generator);
+    return NULL;
 }

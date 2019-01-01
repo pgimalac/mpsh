@@ -19,13 +19,10 @@
 #include "utils.h"
 
 #define DEFAULT_INVITE "[\\u@\\h : \\w]$ "
-#define DEFAULT_CHEMIN "/usr/bin:/bin"
+#define DEFAULT_CHEMIN "/bin/usr/bin:/usr/local/bin"
 #define DEFAULT_MPSHRC "export CHEMIN=$PATH\nINVITE=\"[\\u@\\h : \\w]$ \""
 
 extern char** environ;
-extern char** matches;
-extern char** completions;
-extern char* command;
 
 hashmap_t *vars;
 hashmap_t *aliases;
@@ -111,8 +108,6 @@ static void init_mpsh() {
 void exit_mpsh(int ret){
     for (char** st = environ; *st; st++)
         free(*st);
-
-    free(command);
 
     hashmap_destroy(aliases, 1);
     hashmap_destroy(vars, 1);

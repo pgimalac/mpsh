@@ -288,6 +288,7 @@ unsigned char builtin_complete(cmd_s* cmd, int fdin, int fdout, int fderr){
     array_add(arr, NULL);
     char** st = array_to_tab(arr);
     char* buff = strappv(st);
+    free(st);
 
     hashmap_add(compl, strdup(cmd->argv[1]), buff, 1);
 
