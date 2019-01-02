@@ -21,7 +21,7 @@ short list_add(list_t** l, void* s){
     return 0;
 }
 
-short list_remove(list_t** l, int i){
+void* list_remove(list_t** l, int i){
     if (*l == NULL || i < 0)
         return 0;
     int k;
@@ -32,20 +32,26 @@ short list_remove(list_t** l, int i){
     if (k == i){
         list_t* tmp = *l;
         *l = (*l)->next;
-        free(tmp);
+        return tmp->val;
     }
-    return 1;
+    return 0;
 }
 
 short list_filter(list_t **l, int(*pred)(void*)) {
     if (*l == 0) return -1;
     int i = -1, k = 0;
 
-    while (*l) {
-        if (pred((*l)->val)) {
-            i = k;
-            *l = (*l)->next ? (*l)->next->next : 0;
-        } else *l = (*l)->next;
+    if (pred((*l)->val)) {
+        *l = (*l)->next;
+        i = k++;
+    }
+
+    while (*l && (*l)->next) {
+        if (pred((*l)->next->val)) {
+            i = k++;
+            (*l)->next = (*l)->next->next;
+        }
+        l = &(*l)->next;
         k++;
     }
 
@@ -73,6 +79,34 @@ short list_set(list_t* l, int i, void* v){
     }
     return 0;
 }
+
+void list_iter(list_t *l, void(*f)(void*)) {
+    while (l) {
+        f(l->val);
+        l = l->next;
+    }
+}
+
+void list_iteri(list_t *l, void(*f)(int, void*)) {
+    int i = 0;
+    while (l) {
+        f(i++, l->val);
+        l = l->next;
+    }
+}
+
+list_t *list_rev (list_t *l) {
+    if (l == 0) return 0;
+
+    list_t *t = 0;
+    while (l) {
+        list_add(&t, l->val);
+        l = l->next;
+    }
+
+    return t;
+}
+
 
 int list_size(list_t* l){
     int i = 0;
@@ -105,11 +139,4 @@ void **list_to_tab(list_t *list, size_t sz) {
     *tabi = 0;
 
     return tab;
-}
-
-void list_iter(list_t *l, void(*f)(void *)) {
-    while (l) {
-        f(l->val);
-        l = l->next;
-    }
 }

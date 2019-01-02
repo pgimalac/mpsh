@@ -8,6 +8,7 @@ extern void* yy_scan_string(const char *);
 extern cmd_t *parse_ret;
 extern hashmap_t *vars;
 
+list_t *bgps;
 /**
  * Handler called when a child terminate
  * Used if the process was running in background

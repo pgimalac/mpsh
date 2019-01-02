@@ -46,23 +46,19 @@ struct state *create_state () {
 
 list_t *bgps = 0;
 
-struct bg_process {
-    int pid;
-    char *name;
-};
-
 static int g_pid = 0;
-int compare_bg_process(struct bg_process *a) {
-    return a->pid == g_pid;
+int seek_pid (int *a) {
+    return g_pid == *a;
 }
 
 void sigchild_handler (int sig) {
     int pid, status;
     if ((pid = wait(&status)) == -1) return;
     g_pid = pid;
-    int index = list_filter(&bgps, (int(*)(void*))compare_bg_process);
+    int len = list_size(bgps);
+    int index = list_filter(&bgps, (int(*)(void*))seek_pid);
     if (index == -1) return;
-    printf("[%d] %d %d\n", index + 1, pid, status);
+    printf("\n[%d] %d %d\n", len - index, pid, status);
 }
 
 void exec_simple_redir (struct simple_redir *red, int fds[REGISTER_TABLE_SIZE]) {
@@ -108,15 +104,6 @@ void exec_redirections (list_t *r, int fds[REGISTER_TABLE_SIZE]) {
     }
 }
 
-struct bg_process *create_bg_process(int pid, char *name) {
-    struct bg_process *ret = malloc(sizeof(struct bg_process));
-    if (ret) {
-        ret->pid  = pid;
-        ret->name = name;
-    }
-    return ret;
-}
-
 unsigned char exec_simple (struct cmd_s *cmd, struct state *st) {
     if (is_builtin(cmd->argv[0])) {
         exec_redirections(cmd->redirs, st->fds);
@@ -153,8 +140,10 @@ unsigned char exec_simple (struct cmd_s *cmd, struct state *st) {
         close(st->to_close[--st->close_index]);
 
     if (cmd->bg) {
-        list_add(&bgps, create_bg_process(pid, strdup(cmd->argv[0])));
-        printf("%d [%d]\n", list_size(bgps), pid);
+        int *p = malloc(sizeof(int));
+        *p = pid;
+        list_add(&bgps, p);
+        printf("[%d] %d\n", list_size(bgps), pid);
     } else waitpid(pid, &status, 0);
     free(path);
     return status;
