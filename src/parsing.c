@@ -141,7 +141,7 @@ void free_cmd_s(cmd_s* c){
     free(c->argv);
     for (list_t* l = c->redirs; l; l = l->next)
         free_redir((redir*)l->val);
-    list_destroy(c->redirs, 1);
+    list_destroy(c->redirs, 0);
     free(c);
 }
 

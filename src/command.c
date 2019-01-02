@@ -142,7 +142,6 @@ unsigned char exec_simple (struct cmd_s *cmd, struct state *st) {
         dup2(st->fds[0], 0);
         dup2(st->fds[1], 1);
         dup2(st->fds[2], 2);
-        free(st);
         if (execv(path, cmd->argv) == -1) {
             perror("mpsh");
             return 1;
@@ -158,7 +157,6 @@ unsigned char exec_simple (struct cmd_s *cmd, struct state *st) {
         printf("%d [%d]\n", list_size(bgps), pid);
     } else waitpid(pid, &status, 0);
     free(path);
-    free(st);
     return status;
 }
 
@@ -344,6 +342,7 @@ void command_line_handler (char *input) {
 
     add_var(strdup("?"), uchar_to_string(ret), 0);
     free_cmd_t(parse_ret);
+    parse_ret = NULL;
 }
 
 static char* search_dir(char* st, char* path, short rec){
