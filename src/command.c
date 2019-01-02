@@ -258,7 +258,7 @@ unsigned char exec_script(int fd){
         return 1;
     }
 
-    char *line = 0;
+    char *line = NULL;
     size_t len = 0;
     ssize_t nread;
 
@@ -267,6 +267,8 @@ unsigned char exec_script(int fd){
             line[strlen(line) - 1] = 0;
         command_line_handler(line);
         free(line);
+        line = NULL;
+        len = 0;
     }
 
     fclose(file);
