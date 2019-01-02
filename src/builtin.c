@@ -17,7 +17,6 @@
 extern hashmap_t *aliases;
 extern hashmap_t *compl;
 extern char** environ;
-extern void exit_mpsh(int);
 
 /**
  * echo [args...] :
@@ -54,7 +53,7 @@ unsigned char builtin_exit (cmd_s* cmd, int fdin, int fdout, int fderr){
     }
 
     if (n >= 0 && n < 256)
-        exit_mpsh(n);
+        exit(n);
 
     dprintf(fderr, "%s\n", "exit: the return status must be between 0 and 255.");
     return 1;
@@ -121,14 +120,8 @@ unsigned char builtin_export (cmd_s* cmd, int fdin, int fdout, int fderr){
     }
 
     for (char** st = cmd->argv + 1; *st; st++){
-        char* tmp = strchr(*st, '=');
-
-        if (tmp == NULL)
-            add_var(strdup(*st), NULL, 1);
-        else {
-            (*st)[tmp - *st] = '\0';
-            add_var(strdup(*st), strdup(tmp + 1), 1);
-        }
+        char* st1 = *st, *st2 = strsep(&st1, "=");
+        add_var(strdup(st2), st1 == NULL ? NULL : strdup(st1), 1);
     }
     return 0;
 }

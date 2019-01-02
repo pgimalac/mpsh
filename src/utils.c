@@ -169,7 +169,7 @@ char *replace_macros(char *str) {
             switch (*str++) {
             case 'u':
                 ps = *getpwuid(geteuid());
-                buf = strncat(buf, strdup(ps.pw_name), 1024);
+                buf = strncat(buf, ps.pw_name, 1024);
                 break;
             case 'h':
                 gethostname(tmp, 256);

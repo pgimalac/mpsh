@@ -105,17 +105,6 @@ static void init_mpsh() {
     }
 }
 
-void exit_mpsh(int ret){
-    for (char** st = environ; *st; st++)
-        free(*st);
-
-    hashmap_destroy(aliases, 1);
-    hashmap_destroy(vars, 1);
-    hashmap_destroy(compl, 1);
-
-    exit(ret);
-}
-
 int main (void) {
     char *s, *invite, fc;
 
@@ -137,5 +126,5 @@ int main (void) {
         free(invite);
     }
 
-    exit_mpsh(0);
+    return 0;
 }

@@ -96,6 +96,8 @@ args:
   IDENT          { $$ = list_init($1, 0); }
 | IDENT EQ IDENT {
     char *s = strappl($1, "=", $3, NULL);
+    free($1);
+    free($3);
     $$ = list_init(s, 0);
   }
 | IDENT args {
