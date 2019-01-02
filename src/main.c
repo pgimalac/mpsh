@@ -30,7 +30,7 @@ hashmap_t *compl;
 
 static int create_mpshrc (char* path) {
     printf("~/.mpshrc not found.\nCreation of a default .mpshrc\nThe default content is\n\n%s\n\n", DEFAULT_MPSHRC);
-    int fd = open (path, O_WRONLY | O_CREAT);
+    int fd = open (path, O_WRONLY | O_CREAT | O_TRUNC, S_IRWXU | S_IRWXG | S_IROTH);
     if (fd == -1){
         perror("mpsh: mpshrc creation");
         return -1;
