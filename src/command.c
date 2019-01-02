@@ -143,7 +143,6 @@ unsigned char add_variable (struct var_d *var) {
 
 unsigned char exec_with_redirections (cmd_t *cmd, int fds[REGISTER_TABLE_SIZE]);
 
-// TODO: builtins in pipes dont work
 unsigned char exec_pipe (cmd_t *left, cmd_t *right, int fds[REGISTER_TABLE_SIZE]) {
     int fdpipe[2], pid;
 
@@ -151,6 +150,7 @@ unsigned char exec_pipe (cmd_t *left, cmd_t *right, int fds[REGISTER_TABLE_SIZE]
         perror("mpsh: Broken pipe");
         return 1;
     }
+
     if ((pid = fork()) == -1) {
         perror("mpsh: Fork error");
         return 1;

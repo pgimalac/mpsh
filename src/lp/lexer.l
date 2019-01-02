@@ -185,7 +185,8 @@ ident   [^<>|&;$\\" "=]+
 
     char *alias = hashmap_get(aliases, yylval.value);
     if (alias) {
-        hashset_add(used, alias);
+        alias_done = 0;
+        hashset_add(used, yylval.value);
         buffer_stack[alias_depth++] = YY_CURRENT_BUFFER;
         yy_switch_to_buffer(yy_scan_string(strdup(alias)));
         BEGIN INITIAL;
@@ -210,7 +211,8 @@ ident   [^<>|&;$\\" "=]+
 
     char *alias = hashmap_get(aliases, yylval.value);
     if (alias) {
-        hashset_add(used, alias);
+        alias_done = 0;
+        hashset_add(used, yylval.value);
         buffer_stack[alias_depth++] = YY_CURRENT_BUFFER;
         yy_switch_to_buffer(yy_scan_string(strdup(alias)));
         BEGIN INITIAL;
