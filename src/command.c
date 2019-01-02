@@ -122,6 +122,7 @@ unsigned char exec_simple (struct cmd_s *cmd, struct state *st) {
     exec_redirections (cmd->redirs, st->fds);
     if (st->fork && ((pid = fork()) == -1)) {
         perror("mpsh: Fork error");
+        free(path);
         return 1;
     }
 
@@ -129,11 +130,9 @@ unsigned char exec_simple (struct cmd_s *cmd, struct state *st) {
         dup2(st->fds[0], 0);
         dup2(st->fds[1], 1);
         dup2(st->fds[2], 2);
-        if (execv(path, cmd->argv) == -1) {
-            perror("mpsh");
-            return 1;
-        }
-        return 0;
+        execv(path, cmd->argv);
+        perror("mpsh");
+        return 1;
     }
 
     while (st->close_index > 0)
@@ -146,7 +145,7 @@ unsigned char exec_simple (struct cmd_s *cmd, struct state *st) {
         printf("[%d] %d\n", list_size(bgps), pid);
     } else waitpid(pid, &status, 0);
     free(path);
-    return status;
+    return WEXITSTATUS(status);
 }
 
 unsigned char add_variable (struct var_d *var) {
