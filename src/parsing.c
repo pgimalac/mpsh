@@ -1,6 +1,6 @@
 #include <stdlib.h>
 
-#include "list.h"
+#include "types/list.h"
 #include "parsing.h"
 
 var_d* create_var_d (char *name, char *value) {

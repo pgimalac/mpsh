@@ -9,6 +9,7 @@
 
 #include "list.h"
 #include "parsing.h"
+#include "utils.h"
 
     extern int yylex();
     extern void yyerror(char *s);
@@ -94,8 +95,7 @@ redir:
 args:
   IDENT          { $$ = list_init($1, 0); }
 | IDENT EQ IDENT {
-    char *s = malloc(strlen($1) + strlen($3) + 2);
-    sprintf(s, "%s=%s", $1, $3);
+    char *s = strappl($1, "=", $3, NULL);
     $$ = list_init(s, 0);
   }
 | IDENT args {

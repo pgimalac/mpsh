@@ -28,8 +28,14 @@ ident   [^<>|&;$\\" "=]+
 %x STRING
 %%
 
+<INITIAL,IDENT>"?" {
+    yylval.value = secure_get_var("?");
+    BEGIN INITIAL;
+    return TOK_IDENT;
+}
+
 <INITIAL,IDENT>"~" {
-    yylval.value = strdup(secure_get_var("HOME"));
+    yylval.value = secure_get_var("HOME");
     BEGIN INITIAL;
     return TOK_IDENT;
 }
@@ -158,7 +164,7 @@ ident   [^<>|&;$\\" "=]+
 
 <IDENT>\\. {
     yylval.value = strappl(yylval.value, yytext + 1, NULL);
- }
+}
 
 <IDENT>. {
     yyless(0);

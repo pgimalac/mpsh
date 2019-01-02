@@ -5,13 +5,19 @@
 #ifndef H_PARSER
 #define H_PARSER
 
-#include "list.h"
+#include "types/list.h"
 
+/**
+ * Representing a variable assignation
+ */
 typedef struct var_d {
     char *name;
     char *value;
 } var_d;
 
+/**
+ * Enumerate all kind of redirections
+ */
 typedef enum {
       REDIR_WRITE,          /* > */
       REDIR_APP,            /* >> */
@@ -41,6 +47,10 @@ typedef struct file_redir {
     redir_t type;
 } file_redir;
 
+/**
+ * A redirection is either a
+ * file redirection or a simple redirection.
+ */
 typedef struct redir {
     union {
         file_redir *fredir;
@@ -60,6 +70,9 @@ typedef struct cmd_s {
     list_t *redirs;
 } cmd_s;
 
+/**
+ * All kinds of binary operator between functions
+ */
 typedef enum
     {
      PIPE,                     /* | */
@@ -72,10 +85,14 @@ typedef struct cmd_t cmd_t;
 
 typedef struct cmd_b {
     cmd_t *left, *right;
-
     bin_op type;
 } cmd_b;
-
+/**
+ * A command is either
+ * - a binary operator between to 2 other commands
+ * - a simple command
+ * - a variable assignation
+ */
 typedef enum
     {
      BIN,
@@ -116,6 +133,10 @@ cmd_t* create_cmd_with_simple (cmd_s *s);
 cmd_t* create_cmd_with_bin_op (cmd_b *b);
 
 cmd_t* create_cmd_with_var_def (var_d *v);
+
+/**
+ * Destructors
+ */
 
 void free_var_d(var_d*);
 

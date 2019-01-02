@@ -28,8 +28,7 @@ DEPNAME = $(OBJ)
 CC = gcc
 LEX = flex
 YACC = bison
-FLAGS = -Wall -Wno-unused-parameter -Wno-unused-function \
-		-Wextra -g $(foreach d, $(ALL_FOLDERS), -I $(d))
+FLAGS = -Wall -Wextra -Wno-unused-parameter -g $(foreach d, $(ALL_FOLDERS), -I $(d))
 
 all: gen $(NAME)
 
@@ -40,6 +39,7 @@ gen:
 	@echo "Generating parser"
 	@$(YACC) -d src/lp/parser.y -o src/lp/parser.c
 	@echo "Parser generated in src/lp/parser.c"
+	@echo "Start compiling objects"
 	@echo "Compiling src/lp/lexer.c"
 	@$(CC) $(FLAGS) -c src/lp/lexer.c -o src/lp/lexer.o $(LDLIBS) $(LDLIBS_OBJ)
 	@echo "Compiling src/lp/parser.c"
@@ -56,7 +56,7 @@ $(NAME): $(DEPNAME)
 
 clean:
 	@echo "Clean objects"
-	rm -rf $(OBJ) $(FILES_LP_FP)
+	@rm -rf $(OBJ) $(FILES_LP_FP)
 
 fclean: clean
 	@echo "Clean executable $(NAME)"
