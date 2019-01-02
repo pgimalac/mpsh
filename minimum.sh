@@ -53,7 +53,7 @@ sed -i -e 's/bash/mpsh/g' /tmp/err_$USER.bash
 sed -i -e 's/\/bin\/ls/ls/g' /tmp/err_$USER.bash
 
 echo -e "*** sorties obtenues (à gauche la sortie théorique, à droite la vôtre)\n"
-diff -W 70 -y /tmp/rep_$USER.bash /tmp/rep_$USER.mpsh
+diff -W 130 -y /tmp/rep_$USER.bash /tmp/rep_$USER.mpsh
 if [ $? -eq 0 ]
 then echo -e "\033[0;32m\n*** sortie correcte\n\n\033[00m"
 else echo -e "\033[0;31m\n*** des erreurs dans la sortie\n\n\033[00m"

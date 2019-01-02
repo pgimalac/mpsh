@@ -35,9 +35,7 @@ ident   [^<>|&;$\\" "=]+
 }
 
 <INITIAL,IDENT>"$"{var_id} {
-    char *value = get_var(yytext + 1);
-    if (!value)
-        value = strdup(yytext);
+    char *value = secure_get_var(yytext + 1);
     if (YY_START == INITIAL) {
         yylval.value = value;
         BEGIN IDENT;
