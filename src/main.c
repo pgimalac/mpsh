@@ -18,9 +18,9 @@
 #include "env.h"
 #include "utils.h"
 
-#define DEFAULT_INVITE "[\\u@\\h : \\w]$ "
+#define DEFAULT_INVITE "[\\u@\\h : \\W]$ "
 #define DEFAULT_CHEMIN "/bin/usr/bin:/usr/local/bin"
-#define DEFAULT_MPSHRC "export CHEMIN=$PATH\nINVITE=\"[\\u@\\h : \\w]$ \""
+#define DEFAULT_MPSHRC "export CHEMIN=$PATH\nINVITE=\"[\\u@\\h : \\W]$ \""
 
 extern char** environ;
 
@@ -32,12 +32,12 @@ static int create_mpshrc (char* path) {
     printf("~/.mpshrc not found.\nCreation of a default .mpshrc\nThe default content is\n\n%s\n\n", DEFAULT_MPSHRC);
     int fd = open (path, O_WRONLY | O_CREAT);
     if (fd == -1){
-        perror("mpshrc creation");
+        perror("mpsh: mpshrc creation");
         return -1;
     }
 
     if (write(fd, DEFAULT_MPSHRC, strlen(DEFAULT_MPSHRC)) == -1){
-        perror("mpshrc writing");
+        perror("mpsh: mpshrc writing");
         close(fd);
         return -1;
     }
