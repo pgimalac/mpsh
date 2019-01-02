@@ -4,7 +4,7 @@
 #include "types/hashmap.h"
 #include "parsing.h"
 
-extern int yy_scan_string(const char *);
+extern void* yy_scan_string(const char *);
 extern cmd_t *parse_ret;
 extern hashmap_t *vars;
 

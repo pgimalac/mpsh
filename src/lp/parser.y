@@ -49,6 +49,7 @@
 %type <cmd> cmd cmd_simple
 %type <redir_list> redir
 %type <arg_list> args
+%type <value> arg
 
 %start input
 
@@ -93,16 +94,22 @@ redir:
 ;
 
 args:
-  IDENT          { $$ = list_init($1, 0); }
-| IDENT EQ IDENT {
-    char *s = strappl($1, "=", $3, NULL);
-    $$ = list_init(s, 0);
-  }
-| IDENT args {
+  arg      { $$ = list_init($1, 0); }
+| arg args {
     list_add(&$2, $1);
     $$ = $2;
   }
 | error { yyerror ("expecting argument"); return 1;}
+;
+
+arg:
+  IDENT { $$ = $1; }
+| IDENT EQ IDENT {
+    char *s = strappl($1, "=", $3, NULL);
+    free($1);
+    free($3);
+    $$ = s;
+}
 ;
 
 %%

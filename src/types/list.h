@@ -59,4 +59,6 @@ void *list_pop(list_t**);
  */
 void **list_to_tab(list_t *list, size_t sz);
 
+void list_iter(list_t *list, void(*f)(void*));
+
 #endif

@@ -3,3 +3,5 @@ mpsh
 *.o
 *.sublime-project
 *.sublime-workspace
+lexer.c
+parser.c

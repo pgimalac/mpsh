@@ -20,7 +20,6 @@
 extern hashmap_t *aliases;
 extern hashmap_t *compl;
 extern char** environ;
-extern void exit_mpsh(int);
 
 /**
  * echo [args...] :
@@ -57,7 +56,7 @@ unsigned char builtin_exit (cmd_s* cmd, int fdin, int fdout, int fderr){
     }
 
     if (n >= 0 && n < 256)
-        exit_mpsh(n);
+        exit(n);
 
     dprintf(fderr, "%s\n", "exit: the return status must be between 0 and 255.");
     return 1;
@@ -124,14 +123,8 @@ unsigned char builtin_export (cmd_s* cmd, int fdin, int fdout, int fderr){
     }
 
     for (char** st = cmd->argv + 1; *st; st++){
-        char* tmp = strchr(*st, '=');
-
-        if (tmp == NULL)
-            add_var(strdup(*st), NULL, 1);
-        else {
-            (*st)[tmp - *st] = '\0';
-            add_var(strdup(*st), strdup(tmp + 1), 1);
-        }
+        char* st1 = *st, *st2 = strsep(&st1, "=");
+        add_var(strdup(st2), st1 == NULL ? NULL : strdup(st1), 1);
     }
     return 0;
 }
@@ -291,6 +284,7 @@ unsigned char builtin_complete(cmd_s* cmd, int fdin, int fdout, int fderr){
     array_add(arr, NULL);
     char** st = array_to_tab(arr);
     char* buff = strappv(st);
+    free(st);
 
     hashmap_add(compl, strdup(cmd->argv[1]), buff, 1);
 
@@ -305,29 +299,34 @@ struct proc_header {
 
 struct proc_header *make_proc_header(int pid) {
     int fd;
-    char path[512], err[512], buf[512];
+    char *path, *err, buf[512];
     struct proc_header *hdr;
 
+    path = malloc(12 + log_10(pid));
     sprintf(path, "/proc/%d/stat", pid);
     if ((fd = open(path, O_RDONLY)) == -1) {
+        err = malloc(26 + strlen(path));
         sprintf(err, "mpsh: can't read process %s", path);
-        perror(err);
+        perror("cant read");
         return 0;
     }
 
     if(read(fd, buf, 250) == -1) {
+        err = malloc(27 + strlen(path));
         sprintf(err, "mpsh: error while reading %s", path);
-        perror(err);
+        perror("error read");
         return 0;
     }
 
     if((hdr = malloc(sizeof(struct proc_header))) != 0) {
+        hdr->name = malloc(256);
         if (sscanf(buf, "%d (%[^)]) %c", &hdr->pid, hdr->name, &hdr->state) == -1) {
             perror("error while scan\n");
             return 0;
         }
     }
 
+    free(path);
     close(fd);
     return hdr;
 }

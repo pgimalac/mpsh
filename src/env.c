@@ -9,10 +9,6 @@
 extern char **environ;
 extern hashmap_t* vars;
 
-static char* env_var (char* k, char* v){
-    return strappl(k, "=", v, NULL);
-}
-
 char* get_var (char* k){
     if (!k)
         return NULL;
@@ -46,7 +42,7 @@ void add_var (char* k, char* v, short env){
         hashmap_remove(vars, k, 1);
 
     if (env){
-        putenv(env_var(k, v));
+        putenv(strappl(k, "=", v, NULL));
         free(k);
         free(v);
     } else

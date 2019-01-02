@@ -28,12 +28,6 @@ ident   [^<>|&;$\\" "=]+
 %x STRING
 %%
 
-<INITIAL,IDENT>"?" {
-    yylval.value = secure_get_var("?");
-    BEGIN INITIAL;
-    return TOK_IDENT;
-}
-
 <INITIAL,IDENT>"~" {
     yylval.value = secure_get_var("HOME");
     BEGIN INITIAL;
@@ -41,23 +35,29 @@ ident   [^<>|&;$\\" "=]+
 }
 
 <INITIAL,IDENT>"$"{var_id} {
-    char *value = secure_get_var(yytext + 1);
-    value = value ? value : yytext;
+    char *value = get_var(yytext + 1);
+    if (!value)
+        value = strdup(yytext);
     if (YY_START == INITIAL) {
         yylval.value = value;
         BEGIN IDENT;
     } else {
-        yylval.value = strappl(yylval.value, value, NULL);
+        char* tmp = strappl(yylval.value, value, NULL);
+        free(yylval.value);
+        free(value);
+        yylval.value = tmp;
     }
 }
 
-<INITIAL>\" { yylval.value = "";BEGIN(STRING); }
+<INITIAL>\" { yylval.value = strdup("");BEGIN(STRING); }
 <STRING>\" {
     BEGIN(INITIAL);
     return TOK_IDENT;
 }
 <STRING>[^\"] {
-    yylval.value = strappl(yylval.value, yytext, NULL);
+    char* tmp = strappl(yylval.value, yytext, NULL);
+    free(yylval.value);
+    yylval.value = tmp;
 }
 <STRING><<EOF>> {
     BEGIN INITIAL;
@@ -159,11 +159,15 @@ ident   [^<>|&;$\\" "=]+
 }
 
 <IDENT>{ident} {
-    yylval.value = strappl(yylval.value, yytext, NULL);
+    char* tmp = strappl(yylval.value, yytext, NULL);
+    free(yylval.value);
+    yylval.value = tmp;
 }
 
 <IDENT>\\. {
-    yylval.value = strappl(yylval.value, yytext + 1, NULL);
+    char* tmp = strappl(yylval.value, yytext + 1, NULL);
+    free(yylval.value);
+    yylval.value = tmp;
 }
 
 <IDENT>. {
@@ -181,7 +185,8 @@ ident   [^<>|&;$\\" "=]+
 
     char *alias = hashmap_get(aliases, yylval.value);
     if (alias) {
-        hashset_add(used, strdup(alias));
+        alias_done = 0;
+        hashset_add(used, yylval.value);
         buffer_stack[alias_depth++] = YY_CURRENT_BUFFER;
         yy_switch_to_buffer(yy_scan_string(strdup(alias)));
         BEGIN INITIAL;
@@ -206,7 +211,8 @@ ident   [^<>|&;$\\" "=]+
 
     char *alias = hashmap_get(aliases, yylval.value);
     if (alias) {
-        hashset_add(used, strdup(alias));
+        alias_done = 0;
+        hashset_add(used, yylval.value);
         buffer_stack[alias_depth++] = YY_CURRENT_BUFFER;
         yy_switch_to_buffer(yy_scan_string(strdup(alias)));
         BEGIN INITIAL;
@@ -225,7 +231,7 @@ ident   [^<>|&;$\\" "=]+
         yy_switch_to_buffer(buffer_stack[--alias_depth]);
     } else {
         alias_done = 0;
-        hashset_destroy(used, 1);
+        hashset_destroy(used, 0);
         used = 0;
         yyterminate();
     }
