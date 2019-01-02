@@ -271,28 +271,36 @@ unsigned char exec_script(int fd){
         len = 0;
     }
 
+    free(line);
     fclose(file);
     close(fd);
     return 0;
 }
 
 unsigned char exec_cmd (cmd_t *cmd) {
-    struct state *st = create_state();
-
     if (!cmd) return 0;
+    struct state *st = create_state();
+    unsigned char ret;
+
     switch (cmd->type) {
     case SIMPLE:
-        return exec_simple(cmd->cmd_sim, st);
+        ret = exec_simple(cmd->cmd_sim, st);
+        break;
     case BIN:
         if (cmd->cmd_bin->type == PIPE)
-            return exec_pipe(cmd->cmd_bin->left, cmd->cmd_bin->right, st);
-        return exec_bin(cmd->cmd_bin);
+            ret = exec_pipe(cmd->cmd_bin->left, cmd->cmd_bin->right, st);
+        else
+            ret = exec_bin(cmd->cmd_bin);
+        break;
     case VAR:
-        return add_variable(cmd->cmd_var);
+        ret = add_variable(cmd->cmd_var);
+        break;
     default:
         fprintf(stderr, "unknow command type\n");
-        return 1;
+        ret = 1;
     }
+    free(st);
+    return ret;
 }
 
 void print_cmd (cmd_t *cmd) {
