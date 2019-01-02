@@ -41,11 +41,17 @@ short list_filter(list_t **l, int(*pred)(void*)) {
     if (*l == 0) return -1;
     int i = -1, k = 0;
 
-    while (*l) {
-        if (pred((*l)->val)) {
-            i = k;
-            *l = (*l)->next ? (*l)->next->next : 0;
-        } else *l = (*l)->next;
+    if (pred((*l)->val)) {
+        *l = (*l)->next;
+        i = k++;
+    }
+
+    while (*l && (*l)->next) {
+        if (pred((*l)->next->val)) {
+            i = k++;
+            (*l)->next = (*l)->next->next;
+        }
+        l = &(*l)->next;
         k++;
     }
 

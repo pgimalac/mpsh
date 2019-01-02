@@ -308,6 +308,8 @@ struct proc_header *make_proc_header(int pid) {
         err = malloc(26 + strlen(path));
         sprintf(err, "mpsh: can't read process %s", path);
         perror("cant read");
+        free(err);
+        free(path);
         return 0;
     }
 
@@ -315,6 +317,8 @@ struct proc_header *make_proc_header(int pid) {
         err = malloc(27 + strlen(path));
         sprintf(err, "mpsh: error while reading %s", path);
         perror("error read");
+        free(err);
+        free(path);
         return 0;
     }
 
@@ -322,6 +326,9 @@ struct proc_header *make_proc_header(int pid) {
         hdr->name = malloc(256);
         if (sscanf(buf, "%d (%[^)]) %c", &hdr->pid, hdr->name, &hdr->state) == -1) {
             perror("error while scan\n");
+            free(hdr->name);
+            free(hdr);
+            free(path);
             return 0;
         }
     }

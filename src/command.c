@@ -55,9 +55,10 @@ void sigchild_handler (int sig) {
     int pid, status;
     if ((pid = wait(&status)) == -1) return;
     g_pid = pid;
+    int len = list_size(bgps);
     int index = list_filter(&bgps, (int(*)(void*))seek_pid);
     if (index == -1) return;
-    printf("\n[%d] %d %d\n", index + 1, pid, status);
+    printf("\n[%d] %d %d\n", len - index, pid, status);
 }
 
 void exec_simple_redir (struct simple_redir *red, int fds[REGISTER_TABLE_SIZE]) {
