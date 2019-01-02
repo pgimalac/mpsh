@@ -229,34 +229,18 @@ unsigned char exec_script(int fd){
         return 1;
     }
 
-    int buff_size = 256;
-    char *buff = calloc(buff_size, sizeof(char)), fc;
+    char *line = 0;
+    size_t len = 0;
+    ssize_t nread;
 
-    if (!buff){
-        perror("mpsh script");
-        close(fd);
-        return 2;
+    while ((nread = getline(&line, &len, file)) != -1) {
+        if (line[strlen(line) - 1] == '\n')
+            line[strlen(line) - 1] = 0;
+        command_line_handler(line);
+        free(line);
     }
 
-    while (fgets(buff, buff_size, file)){
-        while (buff[buff_size - 1] != '\0'){
-            buff = realloc(buff, 2 * buff_size);
-            if (!buff){
-                perror("mpsh script");
-                close(fd);
-                return 2;
-            }
-            buff[2 * buff_size - 1] = '\0';
-            fgets(buff + buff_size, buff_size, file);
-            buff_size *= 2;
-        }
-        fc = *(buff + strspn(buff, " \t"));
-        if (fc != '#' && fc != '\0' && fc != '\n')
-            command_line_handler(buff);
-        buff[buff_size - 1] = '\0';
-    }
-
-    free(buff);
+    fclose(file);
     close(fd);
     return 0;
 }
