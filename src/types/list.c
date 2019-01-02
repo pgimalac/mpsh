@@ -38,8 +38,8 @@ short list_remove(list_t** l, int i){
 }
 
 short list_filter(list_t **l, int(*pred)(void*)) {
-    if (*l == 0) return 0;
-    int i = 0, k = 0;
+    if (*l == 0) return -1;
+    int i = -1, k = 0;
 
     while (*l) {
         if (pred((*l)->val)) {
@@ -89,7 +89,7 @@ void list_destroy(list_t* l, short f){
     }
 }
 
-void ** list_to_tab(list_t *list, size_t sz) {
+void **list_to_tab(list_t *list, size_t sz) {
     int length = list_size(list) + 1;
     void **tab = malloc(sz * length);
     void **tabi = tab;
@@ -105,4 +105,11 @@ void ** list_to_tab(list_t *list, size_t sz) {
     *tabi = 0;
 
     return tab;
+}
+
+void list_iter(list_t *l, void(*f)(void *)) {
+    while (l) {
+        f(l->val);
+        l = l->next;
+    }
 }

@@ -24,6 +24,26 @@
 
 extern hashmap_t *aliases;
 
+struct state {
+    int to_close[10], close_index;
+    int fork;
+    int fds[REGISTER_TABLE_SIZE];
+};
+
+struct state *create_state () {
+    struct state *st = malloc(sizeof(struct state));
+    if (st) {
+        for (int i = 0; i < REGISTER_TABLE_SIZE; i++) st->fds[i] = -1;
+        st->fds[0] = 0;
+        st->fds[1] = 1;
+        st->fds[2] = 2;
+        st->fork = 1;
+        st->close_index = 0;
+    }
+
+    return st;
+}
+
 list_t *bgps = 0;
 
 struct bg_process {
@@ -41,6 +61,7 @@ void sigchild_handler (int sig) {
     if ((pid = wait(&status)) == -1) return;
     g_pid = pid;
     int index = list_filter(&bgps, (int(*)(void*))compare_bg_process);
+    if (index == -1) return;
     printf("[%d] %d %d\n", index + 1, pid, status);
 }
 
@@ -96,10 +117,10 @@ struct bg_process *create_bg_process(int pid, char *name) {
     return ret;
 }
 
-unsigned char exec_simple (struct cmd_s *cmd, int fds[REGISTER_TABLE_SIZE]) {
+unsigned char exec_simple (struct cmd_s *cmd, struct state *st) {
     if (is_builtin(cmd->argv[0])) {
-        exec_redirections(cmd->redirs, fds);
-        return exec_builtin(cmd, fds[0], fds[1], fds[2]);
+        exec_redirections(cmd->redirs, st->fds);
+        return exec_builtin(cmd, st->fds[0], st->fds[1], st->fds[2]);
     }
 
     char* path = find_cmd(cmd->argv[0]);
@@ -109,18 +130,19 @@ unsigned char exec_simple (struct cmd_s *cmd, int fds[REGISTER_TABLE_SIZE]) {
         return 1;
     }
 
-    int pid, status;
+    int pid = 0, status;
 
-    exec_redirections (cmd->redirs, fds);
-    if ((pid = fork()) == -1) {
+    exec_redirections (cmd->redirs, st->fds);
+    if (st->fork && ((pid = fork()) == -1)) {
         perror("mpsh: Fork error");
         return 1;
     }
 
     if (pid == 0) {
-        dup2(fds[0], 0);
-        dup2(fds[1], 1);
-        dup2(fds[2], 2);
+        dup2(st->fds[0], 0);
+        dup2(st->fds[1], 1);
+        dup2(st->fds[2], 2);
+        free(st);
         if (execv(path, cmd->argv) == -1) {
             perror("mpsh");
             return 1;
@@ -128,11 +150,15 @@ unsigned char exec_simple (struct cmd_s *cmd, int fds[REGISTER_TABLE_SIZE]) {
         return 0;
     }
 
+    while (st->close_index > 0)
+        close(st->to_close[--st->close_index]);
+
     if (cmd->bg) {
         list_add(&bgps, create_bg_process(pid, strdup(cmd->argv[0])));
         printf("%d [%d]\n", list_size(bgps), pid);
     } else waitpid(pid, &status, 0);
     free(path);
+    free(st);
     return status;
 }
 
@@ -141,9 +167,9 @@ unsigned char add_variable (struct var_d *var) {
     return 0;
 }
 
-unsigned char exec_with_redirections (cmd_t *cmd, int fds[REGISTER_TABLE_SIZE]);
+unsigned char exec_with_redirections (cmd_t *cmd, struct state *st);
 
-unsigned char exec_pipe (cmd_t *left, cmd_t *right, int fds[REGISTER_TABLE_SIZE]) {
+unsigned char exec_pipe (cmd_t *left, cmd_t *right, struct state *st) {
     int fdpipe[2], pid;
 
     if (pipe(fdpipe) != 0) {
@@ -158,22 +184,25 @@ unsigned char exec_pipe (cmd_t *left, cmd_t *right, int fds[REGISTER_TABLE_SIZE]
 
     if (pid == 0) {
         close(fdpipe[0]);
-        fds[1] = fdpipe[1];
-        return exec_with_redirections(left, fds);
+        st->fds[1] = fdpipe[1];
+        st->to_close[st->close_index++] = fdpipe[1];
+        st->fork = 0;
+        return exec_with_redirections(left, st);
     }
 
+    st->to_close[st->close_index++] = fdpipe[0];
     close(fdpipe[1]);
-    fds[0] = fdpipe[0];
-    return exec_with_redirections(right, fds);
+    st->fds[0] = fdpipe[0];
+    return exec_with_redirections(right, st);
 }
 
-unsigned char exec_with_redirections (cmd_t *cmd, int fds[REGISTER_TABLE_SIZE]) {
+unsigned char exec_with_redirections (cmd_t *cmd, struct state *st) {
     switch(cmd->type) {
     case SIMPLE:
-        return exec_simple(cmd->cmd_sim, fds);
+        return exec_simple(cmd->cmd_sim, st);
     case BIN:
         // assert it is a pipe
-        return exec_pipe(cmd->cmd_bin->left, cmd->cmd_bin->right, fds);
+        return exec_pipe(cmd->cmd_bin->left, cmd->cmd_bin->right, st);
     default:
         return 0;
     }
@@ -246,18 +275,15 @@ unsigned char exec_script(int fd){
 }
 
 unsigned char exec_cmd (cmd_t *cmd) {
-    int fds[REGISTER_TABLE_SIZE] = {-1};
-    fds[0] = 0;
-    fds[1] = 1;
-    fds[2] = 2;
+    struct state *st = create_state();
 
     if (!cmd) return 0;
     switch (cmd->type) {
     case SIMPLE:
-        return exec_simple(cmd->cmd_sim, fds);
+        return exec_simple(cmd->cmd_sim, st);
     case BIN:
         if (cmd->cmd_bin->type == PIPE)
-            return exec_pipe(cmd->cmd_bin->left, cmd->cmd_bin->right, fds);
+            return exec_pipe(cmd->cmd_bin->left, cmd->cmd_bin->right, st);
         return exec_bin(cmd->cmd_bin);
     case VAR:
         return add_variable(cmd->cmd_var);
