@@ -191,8 +191,24 @@ the completion will suggests only files of specified extentions for the given
 .RS
 Executes the script without fork-ing, allowing it to create and keep vars / alias / completions into mpsh for further uses.
 .RE
+
+.B fg
+[
+.I job_id
+]
+
 .RS
+If a job is running in background, call
+.I fg
+places it on the foreground. If no argument is given, the last jobs created is place on foreground, otherwise the job for the corresponding id
 .RE
 
+.B jobs
+.RS
+List all jobs running in background
+.RE
+
+.RS
+.RE
 .SH AUTHORS
 Maxime FLIN and Pierre Gimalac
