@@ -39,6 +39,9 @@ unsigned char builtin_echo (cmd_s* cmd, int fdin, int fdout, int fderr){
  */
 unsigned char builtin_exit (cmd_s* cmd, int fdin, int fdout, int fderr){
     int n = 0;
+    if (!cmd->argv[1])
+        cmd->argv[1] = get_var("?");
+
     if (cmd->argv[1]){
         if (cmd->argv[2]){
             dprintf(fderr, "%s\n", "exit: too many arguments.");

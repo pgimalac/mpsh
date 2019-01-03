@@ -3,7 +3,7 @@
 .SH NAME
 mpshbuiltins \- description of all mpsh's builtins
 .SH DESCRIPTION
-mpsh is the best shell (at the very least for thoses I know) ever created. He provide a list of builtins \- commands executed directly in the shell \- to improve the user experience. All builtins are described below.
+mpsh is the best shell (at the very least for those I know) ever created. He provides a list of builtin \- commands executed directly in the shell \- to improve the user experience. All builtins are described below.
 .SH BUILTINS
 .BI cd
 [
@@ -23,7 +23,7 @@ utility shall change the working directory of the current shell execution enviro
 ]
 
 .RS
-Display a line of text
+Displays the parameters to stdout.
 .RE
 
 .BI alias
@@ -33,19 +33,19 @@ Display a line of text
 
 .RS
 .B -
-If no arguments are given print all aliases
+If no arguments are given prints all aliases
 .RE
 .RS
 .B -
 If only
 .I var
-is given, print the associated alias
+is given, prints the associated alias
 .RE
 .RS
 .B -
 If an argument of type
 .I var=name
-is given, associate
+is given, associates
 .I var
 to alias
 .I name
@@ -57,10 +57,18 @@ to alias
 ]
 
 .RS
-Exit the shell with
+.B -
+If
 .I n
-exit code. If
-.I n is not specified exit the last command exit code
+is given, exists with n return code
+.RE
+.RS
+.B -
+If
+.I $?
+is a valid unsigned char, exists with $? return code
+.B -
+Else exits with 0.
 .RE
 
 .B export
@@ -69,9 +77,9 @@ exit code. If
 ]
 
 .RS
-The shell shall give the export attribute to the variables corresponding to the specified names, which shall cause them to be in the environment  of subsequently executed commands. If the name of a variable is followed by
-.IR =word,
-then the value of that variable shall be set to word.
+The shell shall give the export attribute to the variables corresponding to the specified names, which shall cause them to be in the environment of subsequently executed commands. If the name of a variable is followed by
+.IR =word
+, then the value of that variable shall be set to word.
 .RE
 
 .B unalias
@@ -80,7 +88,7 @@ then the value of that variable shall be set to word.
 ]
 
 .RS
-Remove the alias for the given
+Removes the alias for the given
 .I name
 .RE
 
@@ -91,7 +99,7 @@ Remove the alias for the given
 ]
 
 .RS
-Indicate how each argument would be interpret by the shell
+Indicates how each argument would be interpreted by the shell
 .RE
 
 .B umask
@@ -100,7 +108,7 @@ Indicate how each argument would be interpret by the shell
 ]
 
 .RS
-Change the umask value.
+Changes the umask value.
 .I n
 must be a number written in octal
 .RE
@@ -118,7 +126,7 @@ If no argument is specified, print all commands stored in the history
 .B -
 If
 .I n
-is a positif integer, execute the
+is a positif integer, executes the
 .I n-ith
 command of the history
 .RE
@@ -126,8 +134,8 @@ command of the history
 .B -
 If
 .I n
-is a negative integer only rememeber the last
-.I n-th
+is a negative integer only remembers the last
+.I -n-th
 commands
 .RE
 
@@ -138,13 +146,13 @@ commands
 ]
 
 .RS
-Print the full path of executable or how they would have been interpreted by the shell otherwise.
+Prints the full path of executable or how they would have been interpreted by the shell otherwise.
 .B mpsh
 use the environnement variable
 .B CHEMIN
 instead of
 .BR PATH.
-This is the reason why
+This is the reason
 .B which
 is a builtin
 .RE
@@ -156,13 +164,13 @@ is a builtin
 
 .RS
 .B -
-If no argument is given, print all defined completion
+If no argument is given, print all defined completions
 .RE
 .RS
 .B -
 If only a
 .I name
-is given, remove all completion associated with the given
+is given, removes all completion associated with the given
 .I name
 .RE
 .RS
@@ -173,8 +181,17 @@ is given and a list of extentions
 .IR ext,
 adds extensions to the list of extensions for the given name. If a such list is
 .BR unempty,
-the completion will suggets only files of specified extentions for the given
+the completion will suggests only files of specified extentions for the given
 .I name
+.RE
+
+.B source
+.I script
+
+.RS
+Executes the script without fork-ing, allowing it to create and keep vars / alias / completions into mpsh for further uses.
+.RE
+.RS
 .RE
 
 .SH AUTHORS
