@@ -21,3 +21,4 @@ Refer to the Merge Request when there is one.
 
 ### Enhancements
     Track memory leaks
+    Implements `fg` and `jobs` builtins
