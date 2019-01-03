@@ -19,7 +19,7 @@ FILES_YP_FP = $(addprefix $(FOLDER_LP), $(FILES_YF))
 
 FILES = $(FILES_TYPES_FP) $(FILES_SRC_FP) $(FILES_LP_FP)
 
-LDLIBS = -lreadline
+LDLIBS = -lreadline -std=gnu99
 LDLIBS_OBJ =
 
 OBJ = $(FILES:%.c=%.o)
@@ -40,9 +40,9 @@ gen:
 	@$(YACC) -d src/lp/parser.y -o src/lp/parser.c
 	@echo "Parser generated in src/lp/parser.c"
 	@echo "Start compiling objects"
-	@echo "Compiling src/lp/lexer.c"
+	@echo "Compiling lexer"
 	@$(CC) $(FLAGS) -c src/lp/lexer.c -o src/lp/lexer.o $(LDLIBS) $(LDLIBS_OBJ)
-	@echo "Compiling src/lp/parser.c"
+	@echo "Compiling parser"
 	@$(CC) $(FLAGS) -c src/lp/parser.c -o src/lp/parser.o $(LDLIBS) $(LDLIBS_OBJ)
 
 %.o: %.c

@@ -58,7 +58,8 @@ extern int yydebug;
     TOK_ERROR = 265,
     TOK_EQ = 266,
     TOK_BG = 267,
-    TOK_WS = 268
+    TOK_TILD = 268,
+    TOK_WS = 269
   };
 #endif
 
@@ -82,7 +83,7 @@ union YYSTYPE
     struct redir *red;
     bin_op op;
 
-#line 86 "src/lp/parser.h" /* yacc.c:1906  */
+#line 87 "src/lp/parser.h" /* yacc.c:1906  */
 };
 
 typedef union YYSTYPE YYSTYPE;

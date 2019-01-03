@@ -22,16 +22,26 @@ alpha   [A-Za-z]
 dig     [0-9]
 escape  \\.
 var_id  ({alpha}|\?)({alpha}|{dig})*
-ident   [^<>|&;$\\" "=]+
+ident   [^~<>|&;$\\" "=]+
 
 %x IDENT
 %x STRING
 %%
 
-<INITIAL,IDENT>"~" {
-    yylval.value = secure_get_var("HOME");
-    BEGIN INITIAL;
-    return TOK_IDENT;
+<INITIAL>"~" {
+    char *homepath = secure_get_var("HOME");
+    if (!homepath) {
+        fprintf(stderr, "Can't use ~ without $HOME variable\n");
+        return TOK_ERROR;
+    }
+    yylval.value = homepath;
+    BEGIN IDENT;
+}
+
+<IDENT>"~" {
+    char *tmp = strappl(yylval.value, strdup(yytext), 0);
+    free(yylval.value);
+    yylval.value = tmp;
 }
 
 <INITIAL,IDENT>"$"{var_id} {

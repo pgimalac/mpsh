@@ -42,7 +42,7 @@
 %left <simple> SIMPLE_REDIR
 %token SEMICOLON
 %token ERROR
-%token EQ BG
+%token EQ BG TILD
 %token WS
 
 %type <cmd> input
