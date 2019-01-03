@@ -8,6 +8,9 @@ Equipe:
 * Pierre Gimalac
 * Maxime Flin
 
+## Manuel Builtins
+Faire `man ./mpsh-builtins.man` pour voir la descriptions des builtins.
+
 ## Sujet : `mpsh`, _aka_ mon petit shell
 
 Le but de ce projet est de vous faire écrire un interpréteur de commandes (connu également sous le nom de _shell_). Dans le reste de l'énoncé, nous appellerons ce shell `mpsh`.
