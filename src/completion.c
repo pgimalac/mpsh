@@ -15,7 +15,8 @@
 #include "env.h"
 #include "utils.h"
 
-#define SEPARATORS (char*[]){"&", "||", ";", ">", "<", NULL}
+#define BIN_SEPARATORS (char*[]){"&", "|", ";", NULL}
+#define REDIR_SEPARATORS (char*[]){">", "<", NULL}
 
 extern hashmap_t* vars;
 extern hashmap_t* compl;
@@ -114,7 +115,7 @@ int find_files_with_ext(char** str){
     if (begin_command == -1 || end_command == -1)
         return 0;
 
-    char* command = strndup(rl_line_buffer, end_command - begin_command);
+    char* command = strndup(rl_line_buffer + begin_command, end_command - begin_command);
     char* filter = hashmap_get(compl, command), *filter_cpy, *tmp;
     free(command);
 
@@ -150,7 +151,11 @@ int find_files_with_ext(char** str){
 
 
 static void find_command(char* str){
-    char* s = find_last_str(str, SEPARATORS);
+    char *s = find_last_str(str, BIN_SEPARATORS), *tmp = find_last_str(str, REDIR_SEPARATORS);
+
+    if (tmp > s)
+        return;
+
     if (!s)
         s = str;
     else
@@ -160,9 +165,9 @@ static void find_command(char* str){
     s += strspn(s, " \t");
 
     begin_command = s - str;
-    char* tmp = strchr(s, ' ');
+    tmp = strchr(s, ' ');
     if (tmp)
-        end_command = tmp - s;
+        end_command = tmp - str;
     else
         end_command = strlen(str);
 }
