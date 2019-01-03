@@ -345,6 +345,19 @@ void print_job(int i, int *pid) {
     free(ps);
 }
 
+unsigned char builtin_source(cmd_s *cmd, int fdin, int fdout, int fderr) {
+    if (!cmd->argv[0] || !cmd->argv[1]){
+        fprintf(stderr, "mpsh: source: not enough arguments.\n");
+        return 1;
+    }
+
+    char* path = strchr(cmd->argv[1], '/') == NULL ? strappl("./", cmd->argv[1]) : strdup(cmd->argv[1]);
+    int fd = open(path, O_RDONLY);
+
+    free(path);
+    return exec_script(fd);
+}
+
 unsigned char builtin_fg(cmd_s *cmd, int fdin, int fdout, int fderr) {
     int *pid, index;
     int *status = 0;
@@ -387,7 +400,8 @@ unsigned char builtin_jobs(cmd_s *cmd, int fdin, int fdout, int fderr) {
 char* builtin_names [] = {"cd", "echo", "alias",
                           "exit", "export", "unalias",
                           "type", "umask", "history",
-                          "which", "complete", "fg", "jobs",
+                          "which", "complete", "source",
+                          "fg", "jobs",
                           NULL};
 
 typedef unsigned char (*builtin)(cmd_s*, int fdin, int fdout, int fderr);
@@ -395,7 +409,8 @@ typedef unsigned char (*builtin)(cmd_s*, int fdin, int fdout, int fderr);
 builtin builtin_functions[] = {builtin_cd, builtin_echo, builtin_alias,
                                builtin_exit, builtin_export, builtin_unalias,
                                builtin_type, builtin_umask, builtin_history,
-                               builtin_which, builtin_complete, builtin_fg, builtin_jobs,
+                               builtin_which, builtin_complete, builtin_source,
+                               builtin_fg, builtin_jobs,
                                NULL};
 
 short is_builtin (char* s){
