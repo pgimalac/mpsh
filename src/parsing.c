@@ -1,9 +1,9 @@
 #include <stdlib.h>
 
-#include "types/list.h"
 #include "parsing.h"
+#include "types/list.h"
 
-var_d* create_var_d (char *name, char *value) {
+var_d *create_var_d(char *name, char *value) {
     var_d *v = malloc(sizeof(var_d));
     if (v) {
         v->name = name;
@@ -13,49 +13,49 @@ var_d* create_var_d (char *name, char *value) {
     return v;
 }
 
-simple_redir* create_simple_redir (redir_t type, int fd1, int fd2) {
+simple_redir *create_simple_redir(redir_t type, int fd1, int fd2) {
     simple_redir *red = malloc(sizeof(simple_redir));
     if (red) {
         red->type = type;
-        red->fd1  = fd1;
-        red->fd2  = fd2;
+        red->fd1 = fd1;
+        red->fd2 = fd2;
     }
 
     return red;
 }
 
-file_redir* create_file_redir (redir_t type, int fd1, char *name) {
+file_redir *create_file_redir(redir_t type, int fd1, char *name) {
     file_redir *red = malloc(sizeof(file_redir));
     if (red) {
-        red->type  = type;
-        red->fd    = fd1;
+        red->type = type;
+        red->fd = fd1;
         red->fname = name;
     }
 
     return red;
 }
 
-redir* redir_from_simple (simple_redir *r) {
+redir *redir_from_simple(simple_redir *r) {
     redir *red = malloc(sizeof(redir));
     if (r) {
-        red->sredir  = r;
+        red->sredir = r;
         red->is_simple = 1;
     }
 
     return red;
 }
 
-redir* redir_from_file (file_redir *r) {
+redir *redir_from_file(file_redir *r) {
     redir *red = malloc(sizeof(redir));
     if (r) {
-        red->fredir  = r;
+        red->fredir = r;
         red->is_simple = 0;
     }
 
     return red;
 }
 
-cmd_s* create_cmd_s (char **argv, list_t *redirs, short bg) {
+cmd_s *create_cmd_s(char **argv, list_t *redirs, short bg) {
     cmd_s *f = malloc(sizeof(cmd_s));
     if (f) {
         f->argv = argv;
@@ -66,7 +66,7 @@ cmd_s* create_cmd_s (char **argv, list_t *redirs, short bg) {
     return f;
 }
 
-cmd_b* create_cmd_b (bin_op op, cmd_t *left, cmd_t *right) {
+cmd_b *create_cmd_b(bin_op op, cmd_t *left, cmd_t *right) {
     cmd_b *b = malloc(sizeof(cmd_b));
     if (b) {
         b->type = op;
@@ -77,7 +77,7 @@ cmd_b* create_cmd_b (bin_op op, cmd_t *left, cmd_t *right) {
     return b;
 }
 
-cmd_t* create_cmd_with_simple (cmd_s *s) {
+cmd_t *create_cmd_with_simple(cmd_s *s) {
     cmd_t *cmd = malloc(sizeof(cmd_t));
     if (cmd) {
         cmd->type = SIMPLE;
@@ -87,7 +87,7 @@ cmd_t* create_cmd_with_simple (cmd_s *s) {
     return cmd;
 }
 
-cmd_t* create_cmd_with_bin_op (cmd_b *b) {
+cmd_t *create_cmd_with_bin_op(cmd_b *b) {
     cmd_t *cmd = malloc(sizeof(cmd_t));
     if (cmd) {
         cmd->type = BIN;
@@ -97,7 +97,7 @@ cmd_t* create_cmd_with_bin_op (cmd_b *b) {
     return cmd;
 }
 
-cmd_t* create_cmd_with_var_def (var_d *v) {
+cmd_t *create_cmd_with_var_def(var_d *v) {
     cmd_t *cmd = malloc(sizeof(cmd_t));
     if (cmd) {
         cmd->type = VAR;
@@ -107,26 +107,30 @@ cmd_t* create_cmd_with_var_def (var_d *v) {
     return cmd;
 }
 
-void free_var_d(var_d* v){
-    if (!v) return;
+void free_var_d(var_d *v) {
+    if (!v)
+        return;
     free(v->name);
     free(v->value);
     free(v);
 }
 
-void free_simple_redir(simple_redir* s){
-    if (!s) return;
+void free_simple_redir(simple_redir *s) {
+    if (!s)
+        return;
     free(s);
 }
 
-void free_file_redir(file_redir* s){
-    if (!s) return;
+void free_file_redir(file_redir *s) {
+    if (!s)
+        return;
     free(s->fname);
     free(s);
 }
 
-void free_redir (redir* r){
-    if (!r) return;
+void free_redir(redir *r) {
+    if (!r)
+        return;
     if (r->is_simple)
         free(r->sredir);
     else
@@ -134,26 +138,29 @@ void free_redir (redir* r){
     free(r);
 }
 
-void free_cmd_s(cmd_s* c){
-    if (!c) return;
-    for (char** tmp = c->argv; *tmp; tmp++)
+void free_cmd_s(cmd_s *c) {
+    if (!c)
+        return;
+    for (char **tmp = c->argv; *tmp; tmp++)
         free(*tmp);
     free(c->argv);
-    for (list_t* l = c->redirs; l; l = l->next)
-        free_redir((redir*)l->val);
+    for (list_t *l = c->redirs; l; l = l->next)
+        free_redir((redir *)l->val);
     list_destroy(c->redirs, 0);
     free(c);
 }
 
-void free_cmd_b(cmd_b* c){
-    if (!c) return;
+void free_cmd_b(cmd_b *c) {
+    if (!c)
+        return;
     free_cmd_t(c->left);
     free_cmd_t(c->right);
     free(c);
 }
 
-void free_cmd_t(cmd_t* c){
-    if (!c) return;
+void free_cmd_t(cmd_t *c) {
+    if (!c)
+        return;
     if (c->type == BIN)
         free_cmd_b(c->cmd_bin);
     else if (c->type == SIMPLE)

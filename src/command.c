@@ -1,22 +1,20 @@
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <sys/types.h>
-#include <sys/stat.h>
+#include <dirent.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <sys/types.h>
-#include <dirent.h>
+#include <sys/wait.h>
+#include <unistd.h>
 
-#include "command.h"
-#include "types/hashset.h"
-#include "lp/parser.h"
 #include "builtin.h"
-#include "types/array.h"
+#include "command.h"
 #include "completion.h"
 #include "env.h"
+#include "lp/parser.h"
+#include "types/array.h"
+#include "types/hashset.h"
 #include "types/list.h"
 #include "utils.h"
 
@@ -30,10 +28,11 @@ struct state {
     int fds[REGISTER_TABLE_SIZE];
 };
 
-struct state *create_state () {
+struct state *create_state() {
     struct state *st = malloc(sizeof(struct state));
     if (st) {
-        for (int i = 0; i < REGISTER_TABLE_SIZE; i++) st->fds[i] = -1;
+        for (int i = 0; i < REGISTER_TABLE_SIZE; i++)
+            st->fds[i] = -1;
         st->fds[0] = 0;
         st->fds[1] = 1;
         st->fds[2] = 2;
@@ -47,21 +46,21 @@ struct state *create_state () {
 list_t *bgps = 0;
 
 static int g_pid = 0;
-int seek_pid (int *a) {
-    return g_pid == *a;
-}
+int seek_pid(int *a) { return g_pid == *a; }
 
-void sigchild_handler (int sig) {
+void sigchild_handler(int sig) {
     int pid, status;
-    if ((pid = wait(&status)) == -1) return;
+    if ((pid = wait(&status)) == -1)
+        return;
     g_pid = pid;
     int len = list_size(bgps);
-    int index = list_filter(&bgps, (int(*)(void*))seek_pid);
-    if (index == -1) return;
+    int index = list_filter(&bgps, (int (*)(void *))seek_pid);
+    if (index == -1)
+        return;
     printf("\n[%d] %d %d\n", len - index, pid, status);
 }
 
-void exec_simple_redir (struct simple_redir *red, int fds[REGISTER_TABLE_SIZE]) {
+void exec_simple_redir(struct simple_redir *red, int fds[REGISTER_TABLE_SIZE]) {
     switch (red->type) {
     case REDIR_ERRWRITE:
         fds[red->fd1] = red->fd2;
@@ -71,9 +70,9 @@ void exec_simple_redir (struct simple_redir *red, int fds[REGISTER_TABLE_SIZE]) 
     }
 }
 
-void exec_file_redir (struct file_redir *red, int fds[REGISTER_TABLE_SIZE]) {
+void exec_file_redir(struct file_redir *red, int fds[REGISTER_TABLE_SIZE]) {
     // TODO: change open permissions
-    int fd = open(red->fname, O_RDWR|O_CREAT, 0644);
+    int fd = open(red->fname, O_RDWR | O_CREAT, 0644);
     if (fd == -1) {
         perror("mpsh: can't create file");
         return;
@@ -95,31 +94,33 @@ void exec_file_redir (struct file_redir *red, int fds[REGISTER_TABLE_SIZE]) {
     }
 }
 
-void exec_redirections (list_t *r, int fds[REGISTER_TABLE_SIZE]) {
+void exec_redirections(list_t *r, int fds[REGISTER_TABLE_SIZE]) {
     while (r) {
-        struct redir *red = (struct redir*)r->val;
-        if (red->is_simple) exec_simple_redir (red->sredir, fds);
-        else exec_file_redir (red->fredir, fds);
+        struct redir *red = (struct redir *)r->val;
+        if (red->is_simple)
+            exec_simple_redir(red->sredir, fds);
+        else
+            exec_file_redir(red->fredir, fds);
         r = r->next;
     }
 }
 
-unsigned char exec_simple (struct cmd_s *cmd, struct state *st) {
+unsigned char exec_simple(struct cmd_s *cmd, struct state *st) {
     if (is_builtin(cmd->argv[0])) {
         exec_redirections(cmd->redirs, st->fds);
         return exec_builtin(cmd, st->fds[0], st->fds[1], st->fds[2]);
     }
 
-    char* path = find_cmd(cmd->argv[0]);
+    char *path = find_cmd(cmd->argv[0]);
 
-    if (!path){
+    if (!path) {
         fprintf(stderr, "mpsh: can't find %s\n", cmd->argv[0]);
         return 1;
     }
 
     int pid = 0, status;
 
-    exec_redirections (cmd->redirs, st->fds);
+    exec_redirections(cmd->redirs, st->fds);
     if (st->fork && ((pid = fork()) == -1)) {
         perror("mpsh: Fork error");
         free(path);
@@ -143,19 +144,20 @@ unsigned char exec_simple (struct cmd_s *cmd, struct state *st) {
         *p = pid;
         list_add(&bgps, p);
         printf("[%d] %d\n", list_size(bgps), pid);
-    } else waitpid(pid, &status, 0);
+    } else
+        waitpid(pid, &status, 0);
     free(path);
     return WEXITSTATUS(status);
 }
 
-unsigned char add_variable (struct var_d *var) {
+unsigned char add_variable(struct var_d *var) {
     add_var(strdup(var->name), strdup(var->value), 0);
     return 0;
 }
 
-unsigned char exec_with_redirections (cmd_t *cmd, struct state *st);
+unsigned char exec_with_redirections(cmd_t *cmd, struct state *st);
 
-unsigned char exec_pipe (cmd_t *left, cmd_t *right, struct state *st) {
+unsigned char exec_pipe(cmd_t *left, cmd_t *right, struct state *st) {
     int fdpipe[2], pid;
 
     if (pipe(fdpipe) != 0) {
@@ -182,8 +184,8 @@ unsigned char exec_pipe (cmd_t *left, cmd_t *right, struct state *st) {
     return exec_with_redirections(right, st);
 }
 
-unsigned char exec_with_redirections (cmd_t *cmd, struct state *st) {
-    switch(cmd->type) {
+unsigned char exec_with_redirections(cmd_t *cmd, struct state *st) {
+    switch (cmd->type) {
     case SIMPLE:
         return exec_simple(cmd->cmd_sim, st);
     case BIN:
@@ -194,18 +196,21 @@ unsigned char exec_with_redirections (cmd_t *cmd, struct state *st) {
     }
 }
 
-unsigned char exec_bin (struct cmd_b *cmd) {
-    if (!cmd) return 0;
+unsigned char exec_bin(struct cmd_b *cmd) {
+    if (!cmd)
+        return 0;
     int left_status;
 
     switch (cmd->type) {
     case AND:
         left_status = exec_cmd(cmd->left);
-        if (left_status != 0) return left_status;
+        if (left_status != 0)
+            return left_status;
         return exec_cmd(cmd->right);
     case OR:
         left_status = exec_cmd(cmd->left);
-        if (left_status != 0) return exec_cmd(cmd->right);
+        if (left_status != 0)
+            return exec_cmd(cmd->right);
         return left_status;
     case SEMI:
         exec_cmd(cmd->left);
@@ -215,30 +220,31 @@ unsigned char exec_bin (struct cmd_b *cmd) {
     }
 }
 
-unsigned char exec_script(int fd){
-    if (fd < 0) return 1;
+unsigned char exec_script(int fd) {
+    if (fd < 0)
+        return 1;
 
     struct stat st;
-    if (fstat(fd, &st) == -1){
+    if (fstat(fd, &st) == -1) {
         perror("mpsh script");
         close(fd);
         return 1;
     }
 
-    if ((st.st_mode & S_IFMT) != S_IFREG){
+    if ((st.st_mode & S_IFMT) != S_IFREG) {
         fprintf(stderr, "mpsh script: not a regular file");
         close(fd);
         return 1;
     }
 
-    if (lseek(fd, 0, SEEK_SET) == -1){
+    if (lseek(fd, 0, SEEK_SET) == -1) {
         perror("mpsh script: can't move to the beginning of the file.");
         close(fd);
         return 1;
     }
 
-    FILE* file = fdopen(fd, "r");
-    if (!file){
+    FILE *file = fdopen(fd, "r");
+    if (!file) {
         perror("mpshrc script");
         close(fd);
         return 1;
@@ -263,8 +269,9 @@ unsigned char exec_script(int fd){
     return 0;
 }
 
-unsigned char exec_cmd (cmd_t *cmd) {
-    if (!cmd) return 0;
+unsigned char exec_cmd(cmd_t *cmd) {
+    if (!cmd)
+        return 0;
     struct state *st = create_state();
     unsigned char ret;
 
@@ -289,8 +296,9 @@ unsigned char exec_cmd (cmd_t *cmd) {
     return ret;
 }
 
-void print_cmd (cmd_t *cmd) {
-    if (!cmd) return;
+void print_cmd(cmd_t *cmd) {
+    if (!cmd)
+        return;
     switch (cmd->type) {
     case SIMPLE:
         printf("simple: ");
@@ -299,11 +307,13 @@ void print_cmd (cmd_t *cmd) {
         printf("\n");
         printf("redirections: \n");
         for (list_t *e = cmd->cmd_sim->redirs; e; e = e->next) {
-            struct redir *r = (redir*)e->val;
+            struct redir *r = (redir *)e->val;
             if (r->is_simple)
-                printf("-> %d %d %d\n", r->sredir->type, r->sredir->fd1, r->sredir->fd2);
+                printf("-> %d %d %d\n", r->sredir->type, r->sredir->fd1,
+                       r->sredir->fd2);
             else
-                printf("-> %d %d %s\n", r->fredir->type, r->fredir->fd, r->fredir->fname);
+                printf("-> %d %d %s\n", r->fredir->type, r->fredir->fd,
+                       r->fredir->fname);
         }
         break;
     case BIN:
@@ -320,11 +330,13 @@ void print_cmd (cmd_t *cmd) {
     }
 }
 
-void command_line_handler (char *input) {
-    if (!input) return;
+void command_line_handler(char *input) {
+    if (!input)
+        return;
 
     yy_scan_string(input);
-    if (yyparse() != 0) return;
+    if (yyparse() != 0)
+        return;
 
     unsigned char ret = exec_cmd(parse_ret);
 
@@ -333,14 +345,14 @@ void command_line_handler (char *input) {
     parse_ret = NULL;
 }
 
-static char* search_dir(char* st, char* path, short rec){
-    DIR* dir = opendir(path);
-    if (!dir){
+static char *search_dir(char *st, char *path, short rec) {
+    DIR *dir = opendir(path);
+    if (!dir) {
         perror("mpsh");
         return NULL;
     }
 
-    char* ret = NULL;
+    char *ret = NULL;
     struct dirent *entry;
     while (!ret && (entry = readdir(dir)))
         if (!strcmp(".", entry->d_name) || !strcmp("..", entry->d_name))
@@ -356,26 +368,27 @@ static char* search_dir(char* st, char* path, short rec){
     return ret;
 }
 
-char* find_cmd(char* st){
+char *find_cmd(char *st) {
     if (!st)
         return NULL;
 
     if (strrchr(st, '/') && is_valid_file_path(st))
         return st;
 
-    char* var_path = get_var("CHEMIN");
+    char *var_path = get_var("CHEMIN");
     if (!var_path)
         return NULL;
 
     int l;
     short rec = 0;
-    char* buff = NULL;
+    char *buff = NULL;
 
-    for (char* path = strtok(var_path, ":"); path && !buff; path = strtok(NULL, ":")) {
+    for (char *path = strtok(var_path, ":"); path && !buff;
+         path = strtok(NULL, ":")) {
         l = strlen(path);
-        if (l >= 1 && path[l - 1] == '/'){
+        if (l >= 1 && path[l - 1] == '/') {
             path[l - 1] = '\0';
-            if (l >= 2 && path[l - 2] == '/'){
+            if (l >= 2 && path[l - 2] == '/') {
                 path[l - 2] = '\0';
                 rec = 1;
             }
@@ -388,8 +401,8 @@ char* find_cmd(char* st){
     return buff;
 }
 
-short is_cmd(char* st){
-    char* s = find_cmd(st);
+short is_cmd(char *st) {
+    char *s = find_cmd(st);
     short ret = s != NULL;
     free(s);
     return ret;

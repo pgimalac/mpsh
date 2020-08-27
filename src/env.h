@@ -5,18 +5,18 @@
  * Initialise environnement variables.
  * Must be called before beginning main loop.
  */
-void init_env_variables ();
+void init_env_variables();
 
 /**
  * Return a replicate of the variable value.
  */
-char* secure_get_var(char*);
+char *secure_get_var(char *);
 
 /**
  * Return the value of the given variable.
  * Obtained with malloc.
  */
-char* get_var (char*);
+char *get_var(char *);
 
 /**
  * Takes the variable name, his value, and a short.
@@ -29,6 +29,6 @@ char* get_var (char*);
  * If the value is NULL, then it is replaced with either
  *  the former value (if the variable already exists) or the empty string
  */
-void add_var (char*, char*, short);
+void add_var(char *, char *, short);
 
 #endif

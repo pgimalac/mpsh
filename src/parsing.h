@@ -19,15 +19,15 @@ typedef struct var_d {
  * Enumerate all kind of redirections
  */
 typedef enum {
-      REDIR_WRITE,          /* > */
-      REDIR_APP,            /* >> */
-      REDIR_ERRWRITE,		/* &>, >& */
-      REDIR_READWRITE,		/* <> */
-      REDIR_READ,           /* < */
-      REDIR_HEREDOC,		/* << */
-      REDIR_MERGEIN,		/* <&n */
-      REDIR_MERGEOUT,		/* >&n */
-      REDIR_CLOSE,          /* >&-, <&- */
+    REDIR_WRITE,     /* > */
+    REDIR_APP,       /* >> */
+    REDIR_ERRWRITE,  /* &>, >& */
+    REDIR_READWRITE, /* <> */
+    REDIR_READ,      /* < */
+    REDIR_HEREDOC,   /* << */
+    REDIR_MERGEIN,   /* <&n */
+    REDIR_MERGEOUT,  /* >&n */
+    REDIR_CLOSE,     /* >&-, <&- */
 } redir_t;
 
 /**
@@ -73,13 +73,12 @@ typedef struct cmd_s {
 /**
  * All kinds of binary operator between functions
  */
-typedef enum
-    {
-     PIPE,                     /* | */
-     AND,                      /* && */
-     OR,                       /* || */
-     SEMI                      /* ; or \n */
-    } bin_op;
+typedef enum {
+    PIPE, /* | */
+    AND,  /* && */
+    OR,   /* || */
+    SEMI  /* ; or \n */
+} bin_op;
 
 typedef struct cmd_t cmd_t;
 
@@ -93,63 +92,58 @@ typedef struct cmd_b {
  * - a simple command
  * - a variable assignation
  */
-typedef enum
-    {
-     BIN,
-     SIMPLE,
-     VAR
-    } cmd_type;
+typedef enum { BIN, SIMPLE, VAR } cmd_type;
 
 struct cmd_t {
-  union {
-    cmd_b *cmd_bin;
-    cmd_s *cmd_sim;
-    var_d *cmd_var;
-  };
+    union {
+        cmd_b *cmd_bin;
+        cmd_s *cmd_sim;
+        var_d *cmd_var;
+    };
 
-  cmd_type type;
+    cmd_type type;
 };
 
 /**
  * Constructors
  */
 
-simple_redir* create_simple_redir (redir_t type, int fd1, int fd2);
+simple_redir *create_simple_redir(redir_t type, int fd1, int fd2);
 
-file_redir* create_file_redir (redir_t type, int fd1, char *name);
+file_redir *create_file_redir(redir_t type, int fd1, char *name);
 
-redir* redir_from_simple (simple_redir *r);
+redir *redir_from_simple(simple_redir *r);
 
-redir* redir_from_file (file_redir *r);
+redir *redir_from_file(file_redir *r);
 
-var_d* create_var_d (char *name, char *value);
+var_d *create_var_d(char *name, char *value);
 
-cmd_s* create_cmd_s (char **argv, list_t *redirs, short bg);
+cmd_s *create_cmd_s(char **argv, list_t *redirs, short bg);
 
-cmd_b* create_cmd_b (bin_op op, cmd_t *left, cmd_t *right);
+cmd_b *create_cmd_b(bin_op op, cmd_t *left, cmd_t *right);
 
-cmd_t* create_cmd_with_simple (cmd_s *s);
+cmd_t *create_cmd_with_simple(cmd_s *s);
 
-cmd_t* create_cmd_with_bin_op (cmd_b *b);
+cmd_t *create_cmd_with_bin_op(cmd_b *b);
 
-cmd_t* create_cmd_with_var_def (var_d *v);
+cmd_t *create_cmd_with_var_def(var_d *v);
 
 /**
  * Destructors
  */
 
-void free_var_d(var_d*);
+void free_var_d(var_d *);
 
-void free_simple_redir(simple_redir*);
+void free_simple_redir(simple_redir *);
 
-void free_file_redir(file_redir*);
+void free_file_redir(file_redir *);
 
-void free_redir (redir*);
+void free_redir(redir *);
 
-void free_cmd_s(cmd_s*);
+void free_cmd_s(cmd_s *);
 
-void free_cmd_b(cmd_b*);
+void free_cmd_b(cmd_b *);
 
-void free_cmd_t(cmd_t*);
+void free_cmd_t(cmd_t *);
 
 #endif

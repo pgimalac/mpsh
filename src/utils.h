@@ -8,52 +8,52 @@
  * Last argument must be NULL.
  * The returned string is obtained with malloc.
  */
-char* strappl(char*, ...);
+char *strappl(char *, ...);
 
 /**
  * Appends all the string of the NULL-terminated array of strings.
  * The returned string is obtained with malloc.
  */
-char* strappv(char**);
+char *strappv(char **);
 
 /**
  * Returns the log 10 of the given int
  */
-int log_10 (int);
+int log_10(int);
 
 /**
  * Returns if the given string is a number
  * Return the concatenation of given strings
  * the list of arguments must be NULL-teminated
  */
-char *strappl(char*, ...);
+char *strappl(char *, ...);
 
 /**
  * Return the concatenation of given strings
  * the list of arguments must be NULL-teminated
  */
-char *strappv(char**);
+char *strappv(char **);
 
 /**
  * Return the number of characters needed to print
  * the given number in base 10
  */
-int log_10 (int);
+int log_10(int);
 
 /**
  * Test if the given string is a positive integer
  */
-short is_positive_number (char*);
+short is_positive_number(char *);
 
 /**
  * Test if the given string is an integer
  */
-short is_number (char*);
+short is_number(char *);
 
 /**
  * Hash function on NULL-terminated strings
  */
-unsigned int hash(char*);
+unsigned int hash(char *);
 
 /**
  * Replaces the macros in a string
@@ -76,7 +76,7 @@ char *replace_macros(char *str);
  * of any of the patterns in the string.
  * The pattern list must be NULL terminated.
  */
-char* find_last_str(char*, char**);
+char *find_last_str(char *, char **);
 
 /**
  * Returns the maximum of the two ints
@@ -87,16 +87,16 @@ int max(int, int);
  * Returns the given string reversed
  * Obtained with malloc.
  */
-char* strrev(char*);
+char *strrev(char *);
 
 /**
  * Returns if the given string is a path to an existing regular file
  */
-short is_valid_file_path(char*);
+short is_valid_file_path(char *);
 
 /**
  * Returns if the given string is a path to an existing directory
  */
-short is_valid_dir_path(char*);
+short is_valid_dir_path(char *);
 
 #endif

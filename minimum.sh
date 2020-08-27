@@ -2,8 +2,7 @@
 
 function test_existence_mpsh {
     which mpsh >& /dev/null
-    if [ "$?" != "0" ]
-    then
+    if [ "$?" != "0" ]; then
         echo -e "\033[0;31m!!! mpsh n'est pas accessible de tout répertoire, le test ne peut être fait !!!\033[00m"
         exit 1
     fi
@@ -54,18 +53,20 @@ sed -i -e 's/\/bin\/ls/ls/g' /tmp/err_$USER.bash
 
 echo -e "*** sorties obtenues (à gauche la sortie théorique, à droite la vôtre)\n"
 diff -W 130 -y /tmp/rep_$USER.bash /tmp/rep_$USER.mpsh
-if [ $? -eq 0 ]
-then echo -e "\033[0;32m\n*** sortie correcte\n\n\033[00m"
-else echo -e "\033[0;31m\n*** des erreurs dans la sortie\n\n\033[00m"
+if [ $? -eq 0 ]; then
+    echo -e "\033[0;32m\n*** sortie correcte\n\n\033[00m"
+else
+    echo -e "\033[0;31m\n*** des erreurs dans la sortie\n\n\033[00m"
 fi
 
 echo -e "****************************************************************************\n"
 
 echo -e "*** sorties erreurs obtenues (à gauche la sortie théorique, à droite la vôtre)\n"
 diff -W 160 -y /tmp/err_$USER.bash /tmp/err_$USER.mpsh
-if [ $? -eq 0 ]
-then echo -e "\033[0;32m\n*** sortie erreur correcte\n\n\033[00m"
-else echo -e "\033[0;31m\n*** des erreurs dans la sortie erreurs\n\n\033[00m"
+if [ $? -eq 0 ]; then
+    echo -e "\033[0;32m\n*** sortie erreur correcte\n\n\033[00m"
+else
+    echo -e "\033[0;31m\n*** des erreurs dans la sortie erreurs\n\n\033[00m"
 fi
 
 nettoyage

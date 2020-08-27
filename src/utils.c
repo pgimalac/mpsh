@@ -1,27 +1,28 @@
-#include <string.h>
-#include <stdlib.h>
-#include <ctype.h>
-#include <stdio.h>
-#include <pwd.h>
-#include <time.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
 #include "utils.h"
 #include "types/list.h"
+#include <ctype.h>
+#include <pwd.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <time.h>
+#include <unistd.h>
 
-char* strappl(char* str1, ...){
-    if (!str1) return NULL;
+char *strappl(char *str1, ...) {
+    if (!str1)
+        return NULL;
 
     va_list ap;
     va_start(ap, str1);
 
-    int* tmp = alloca(sizeof(int));
+    int *tmp = alloca(sizeof(int));
     *tmp = strlen(str1);
     list_t *head = list_init(tmp, NULL), *tail = head;
     int l = *tmp + 1;
-    char* st;
-    while ((st = va_arg(ap, char*))){
+    char *st;
+    while ((st = va_arg(ap, char *))) {
         tmp = alloca(sizeof(int));
         *tmp = strlen(st);
         l += *tmp;
@@ -30,30 +31,31 @@ char* strappl(char* str1, ...){
     }
     va_end(ap);
 
-    char* buff = malloc(sizeof(char) * l);
+    char *buff = malloc(sizeof(char) * l);
     va_start(ap, str1);
     l = 0;
     st = str1;
     do {
         strcpy(buff + l, st);
-        l += *(int*)head->val;
+        l += *(int *)head->val;
         tail = head;
         head = head->next;
         free(tail);
-    } while ((st = va_arg(ap, char*)));
+    } while ((st = va_arg(ap, char *)));
 
     va_end(ap);
     return buff;
 }
 
-char* strappv(char** str){
-    if (!str || !str[0]) return NULL;
+char *strappv(char **str) {
+    if (!str || !str[0])
+        return NULL;
     int *tmp = alloca(sizeof(int));
     *tmp = strlen(str[0]);
     int l = *tmp + 1;
-    list_t* head = list_init(tmp, NULL), *tail = head;
+    list_t *head = list_init(tmp, NULL), *tail = head;
 
-    for(char** st = str + 1; *st; st++){
+    for (char **st = str + 1; *st; st++) {
         tmp = alloca(sizeof(int));
         *tmp = strlen(*st);
         tail->next = list_init(tmp, NULL);
@@ -61,11 +63,11 @@ char* strappv(char** str){
         l += *tmp;
     }
 
-    char* buff = malloc(sizeof(char) * l);
+    char *buff = malloc(sizeof(char) * l);
     l = 0;
-    for (char** st = str; *st; st++){
+    for (char **st = str; *st; st++) {
         strcpy(buff + l, *st);
-        l += *(int*)head->val;
+        l += *(int *)head->val;
         tail = head;
         head = head->next;
         free(tail);
@@ -73,7 +75,7 @@ char* strappv(char** str){
     return buff;
 }
 
-int log_10 (int n) {
+int log_10(int n) {
     int l = 0;
     while (n > 0) {
         n /= 10;
@@ -83,15 +85,18 @@ int log_10 (int n) {
     return l;
 }
 
-short is_positive_number (char *c) {
-    while (isdigit(*c)) c++;
+short is_positive_number(char *c) {
+    while (isdigit(*c))
+        c++;
     return *c == 0;
 }
 
-short is_number (char *c) {
-    if (!isdigit(*c) && *c != '-') return 0;
+short is_number(char *c) {
+    if (!isdigit(*c) && *c != '-')
+        return 0;
     c++;
-    while (isdigit(*c)) c++;
+    while (isdigit(*c))
+        c++;
     return *c == 0;
 }
 
@@ -104,36 +109,33 @@ unsigned int hash(char *s) {
     return hash;
 }
 
-char* uchar_to_string(unsigned char c){
-    char* buff = malloc(sizeof(char) * 4);
+char *uchar_to_string(unsigned char c) {
+    char *buff = malloc(sizeof(char) * 4);
     sprintf(buff, "%d", c);
     return buff;
 }
 
-int max (int a, int b){
-    return a > b ? a : b;
-}
+int max(int a, int b) { return a > b ? a : b; }
 
-char* strrev(char* str){
-    if (!str) return NULL;
+char *strrev(char *str) {
+    if (!str)
+        return NULL;
 
     int len = strlen(str);
-    char* s = calloc(len + 1, sizeof(char));
+    char *s = calloc(len + 1, sizeof(char));
     for (int i = 1; i <= len; i++)
         s[i - 1] = str[len - i];
 
     return s;
 }
 
-static char* min(char* a, char* b){
-    return a < b ? a : b;
-}
+static char *min(char *a, char *b) { return a < b ? a : b; }
 
-char* find_last_str(char* str, char** patterns){
+char *find_last_str(char *str, char **patterns) {
     int len = strlen(str);
     char *rev = strrev(str), *minimum = rev + len, *pattern, *tmp;
 
-    while (*patterns){
+    while (*patterns) {
         pattern = strrev(*patterns++);
         tmp = strstr(rev, pattern);
         if (tmp)
@@ -190,22 +192,23 @@ char *replace_macros(char *str) {
                 sprintf(tmp, "%d:%d:%d", tm.tm_hour, tm.tm_min, tm.tm_sec);
                 buf = strncat(buf, tmp, 1024);
                 break;
-            default: buf[strlen(buf)] = c;
+            default:
+                buf[strlen(buf)] = c;
             }
-        }
-        else buf[strlen(buf)] = c;
+        } else
+            buf[strlen(buf)] = c;
     }
 
     return buf;
 }
 
-short is_valid_file_path(char* st){
+short is_valid_file_path(char *st) {
     struct stat s;
     short ret = stat(st, &s) == 0 && (s.st_mode & S_IFMT) == S_IFREG;
     return ret;
 }
 
-short is_valid_dir_path(char* st){
+short is_valid_dir_path(char *st) {
     struct stat s;
     short ret = stat(st, &s) == 0 && (s.st_mode & S_IFMT) == S_IFDIR;
     return ret;

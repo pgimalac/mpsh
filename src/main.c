@@ -1,42 +1,45 @@
+#include <errno.h>
+#include <fcntl.h>
+#include <readline/history.h>
+#include <readline/readline.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <string.h>
-#include <errno.h>
 #include <sys/stat.h>
-#include <fcntl.h>
-#include <readline/readline.h>
-#include <readline/history.h>
+#include <unistd.h>
 
+#include "command.h"
 #include "completion.h"
+#include "env.h"
+#include "lp/parser.h"
+#include "parsing.h"
 #include "types/array.h"
 #include "types/hashmap.h"
-#include "parsing.h"
-#include "lp/parser.h"
-#include "command.h"
-#include "env.h"
 #include "utils.h"
 
 #define DEFAULT_INVITE "[\\u@\\h : \\W]$ "
 #define DEFAULT_CHEMIN "/bin/usr/bin:/usr/local/bin"
 #define DEFAULT_MPSHRC "export CHEMIN=$PATH\nINVITE=\"[\\u@\\h : \\W]$ \""
 
-extern char** environ;
+extern char **environ;
 
 hashmap_t *vars;
 hashmap_t *aliases;
-hashmap_t *compl;
+hashmap_t * compl ;
 
-static int create_mpshrc (char* path) {
-    printf("~/.mpshrc not found.\nCreation of a default .mpshrc\nThe default content is\n\n%s\n\n", DEFAULT_MPSHRC);
-    int fd = open (path, O_WRONLY | O_CREAT | O_TRUNC, S_IRWXU | S_IRWXG | S_IROTH);
-    if (fd == -1){
+static int create_mpshrc(char *path) {
+    printf("~/.mpshrc not found.\nCreation of a default .mpshrc\nThe default "
+           "content is\n\n%s\n\n",
+           DEFAULT_MPSHRC);
+    int fd =
+        open(path, O_WRONLY | O_CREAT | O_TRUNC, S_IRWXU | S_IRWXG | S_IROTH);
+    if (fd == -1) {
         perror("mpsh: mpshrc creation");
         return -1;
     }
 
-    if (write(fd, DEFAULT_MPSHRC, strlen(DEFAULT_MPSHRC)) == -1){
+    if (write(fd, DEFAULT_MPSHRC, strlen(DEFAULT_MPSHRC)) == -1) {
         perror("mpsh: mpshrc writing");
         close(fd);
         return -1;
@@ -47,11 +50,12 @@ static int create_mpshrc (char* path) {
     return open(path, O_RDONLY);
 }
 
-static void handle_mpshrc(){
-    char* home = get_var("HOME");
-    if (!home) return;
+static void handle_mpshrc() {
+    char *home = get_var("HOME");
+    if (!home)
+        return;
 
-    char* path = strappl(home, "/.mpshrc", NULL);
+    char *path = strappl(home, "/.mpshrc", NULL);
 
     int f = open(path, O_RDONLY);
     if (f == -1 && (f = create_mpshrc(path)) == -1)
@@ -70,7 +74,7 @@ static void handle_mpshrc(){
 }
 
 static void init_mpsh() {
-//    init_completion();
+    //    init_completion();
     rl_readline_name = "mpsh";
 
     rl_attempted_completion_function = fileman_completion;
@@ -85,7 +89,7 @@ static void init_mpsh() {
 
     handle_mpshrc();
 
-    char* tmp;
+    char *tmp;
     // Default value of INVITE
     tmp = get_var("INVITE");
     if (tmp)
@@ -105,7 +109,7 @@ static void init_mpsh() {
     }
 }
 
-int main (void) {
+int main(void) {
     char *s, *invite, fc;
 
     if (signal(SIGCHLD, sigchild_handler) == SIG_ERR) {
@@ -114,10 +118,10 @@ int main (void) {
     }
 
     init_mpsh();
-    while((s = readline ((invite = get_var("INVITE"))))) {
+    while ((s = readline((invite = get_var("INVITE"))))) {
         // first char that is neither a space nor a tab
         fc = *(s + strspn(s, " \t"));
-        if (fc != '#' && fc != '\0' && fc != '\n'){
+        if (fc != '#' && fc != '\0' && fc != '\n') {
             command_line_handler(s);
             add_history(s);
             write_history(0);

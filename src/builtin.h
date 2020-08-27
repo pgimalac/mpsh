@@ -6,12 +6,12 @@
 /**
  * NULL-terminated list of all builtins names
  */
-extern char* builtin_names[];
+extern char *builtin_names[];
 
 /**
  * Test if the given string is a builtin
  */
-short is_builtin (char*);
+short is_builtin(char *);
 
 /**
  * Execute the given command
@@ -19,6 +19,6 @@ short is_builtin (char*);
  * Nexts parameters are file descriptors which refers
  * (in this order) to standard input, output and error output
  */
-unsigned char exec_builtin (cmd_s*, int in, int out, int err);
+unsigned char exec_builtin(cmd_s *, int in, int out, int err);
 
 #endif
